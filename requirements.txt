@@ -1,1 +1,9 @@
+certifi==2025.6.15
+charset-normalizer==3.4.2
 click==8.2.1
+# Editable Git install with no remote (flowlet==0.1.0)
+-e /home/nickisyourfan/Desktop/DEV/flowlet
+idna==3.10
+python-dotenv==1.1.0
+requests==2.32.4
+urllib3==2.5.0

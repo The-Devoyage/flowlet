@@ -7,7 +7,7 @@ setup(
     install_requires=["click"],
     entry_points={
         "console_scripts": [
-            "flo=main:cli",  # flowlet is the CLI command
+            "flowlet=main:cli",  # flowlet is the CLI command
         ],
     },
 )

@@ -1,3 +1,4 @@
 __pycache__
 flowlet.egg-info
 *.env
+venv
