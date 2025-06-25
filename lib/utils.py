@@ -4,10 +4,13 @@ import shlex
 import os
 import textwrap
 import click
+import tempfile
 from typing import Optional
 from pathlib import Path
 from dotenv import load_dotenv
 from pygments import highlight, lexers, formatters
+from detect_secrets.core.secrets_collection import SecretsCollection
+from detect_secrets.settings import default_settings
 
 
 load_dotenv()  # Automatically loads from .env file
@@ -132,3 +135,29 @@ def pretty_print_json(json_obj):
         json_str, lexers.JsonLexer(), formatters.TerminalFormatter()
     )
     click.echo(colorful_json)
+
+
+def contains_secrets(text: str) -> bool:
+    """
+    Check if the text contains potential secrets using detect-secrets.
+
+    Args:
+        text: The string to scan for secrets.
+
+    Returns:
+        True if potential secrets are found, False otherwise.
+    """
+    with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmp:
+        tmp.write(text)
+        tmp.flush()  
+
+        secrets = SecretsCollection()
+        with default_settings():
+            secrets.scan_file(tmp.name)
+
+        # Show secrets in a readable format
+        for _, secret_list in secrets.data.items():
+            for secret in secret_list:
+                print(f"🔐 Potential secret found: {secret.secret_value}")
+
+    return bool(secrets)
