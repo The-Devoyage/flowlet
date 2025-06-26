@@ -72,7 +72,7 @@ flowlet command show myCommand
 ### 🧪 Run a command
 
 ```bash
-flowlet run myCommand
+flowlet command run myCommand
 ```
 
 With options:
@@ -85,23 +85,31 @@ With options:
 Example:
 
 ```bash
-flowlet run myCommand --save-var "token=auth.token"
+flowlet command run myCommand --save-var "token=auth.token"
 ```
 
 This saves the variable to ~/.flowlet_vars.json, allowing it to be reused in other commands with ${token}-style placeholders.
+
+**Hint**
+
+You can run a command with a shorthand syntax:
+
+```bash
+flowlet myCommand
+```
 
 ### 🌐 Sync
 
 🔄 Pull all remote commands
 
 ```bash
-flowlet pull
+flowlet command pull
 ```
 
 ### 📤 Push a command by name
 
 ```bash
-flowlet push myCommand
+flowlet command push myCommand
 ```
 
 ### 🔐 Authentication
@@ -109,19 +117,19 @@ flowlet push myCommand
 🆕 Register
 
 ```bash
-flowlet register
+flowlet auth register
 ```
 
 ### 🔓 Login
 
 ```bash
-flowlet login 
+flowlet auth login 
 ```
 
 ### 🚪 Logout
 
 ```bash
-flowlet logout
+flowlet auth logout
 ```
 
 ### 💡 Variables
