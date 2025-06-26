@@ -8,12 +8,12 @@ from lib.utils import load_vars, save_vars, remove_var
 
 @click.group(name="vars", cls=ClickAliasedGroup)
 def vars_group():
-    """Manage saved variables."""
+    """Manage variables and secrets, stored locally."""
     pass
 
 
-@vars_group.command(aliases=["list", "ls"])
-def list_vars():
+@vars_group.command(aliases=["ls"])
+def list():
     """List all saved variables."""
     vars_data = load_vars()
     if not vars_data:
