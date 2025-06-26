@@ -1,6 +1,6 @@
 # 🌊 Flowlet
 
-**Flowlet** is a modern and minimal command-line tool to save, run, organize, and sync your favorite shell commands (and more) — locally and in the cloud.
+A modern and minimal command-line tool to save, run, organize, and sync your favorite shell commands (and more) — locally and in the cloud.
 
 ---
 
@@ -9,15 +9,17 @@
 - 🔖 Save and organize reusable shell commands  
 - 🚀 Run saved commands with variable injection  
 - 🔐 Detect secrets before saving accidentally  
-- ☁️ Sync with a remote server (Firestore-style API)  
+- ☁️  Sync with a remote server
 - 🧠 Extract and save variables from command output  
+- 📁 Save, update, remove, and list commands & vars  
+- 🪄 Auto JSON correction for malformd data
+- 📤 Push/pull specific or all commands  
+
+### Maybe Soon
+
 - 📦 Pretty and modern terminal UI with `rich`  
 - ✅ Register/login with auth token handling  
 - 👥 Future support for notes, messaging, and collaboration  
-- 🔄 REPL (soon) and real-time sync (planned)  
-- 📁 Save, update, remove, and list commands & vars  
-- 🪄 JSON correction for malformed `-d` data  
-- 📤 Push/pull specific or all commands  
 
 ---
 
@@ -36,10 +38,7 @@ pip install -e .
 ## 🧪 Requirements
 
 - Python 3.8+
-- `click`
-- `rich`
-- `requests`
-- `detect-secrets`
+- `deeb-server` (if self hosted)
 
 Install dependencies:
 
@@ -52,24 +51,26 @@ pip install -r requirements.txt
 ### 🔖 Save a command
 
 ```bash
-flowlet save myCommand "curl -X GET https://api.example.com/data"
+flowlet command save myCommand "curl -X GET https://api.example.com/data"
 ```
 
 If the command contains something that looks like a secret (API keys, tokens, passwords), you’ll get a warning with confirmation.
 
 ### 📜 List saved commands
+
 ```bash
 flowlet command ls
 flowlet command ls --remote  # Fetch from server
 ```
 
 ### 👀 Show a command
+
 ```bash
 flowlet command show myCommand
 ```
 
-
 ### 🧪 Run a command
+
 ```bash
 flowlet run myCommand
 ```
@@ -86,6 +87,8 @@ Example:
 ```bash
 flowlet run myCommand --save-var "token=auth.token"
 ```
+
+This saves the variable to ~/.flowlet_vars.json, allowing it to be reused in other commands with ${token}-style placeholders.
 
 ### 🌐 Sync
 
@@ -106,13 +109,13 @@ flowlet push myCommand
 🆕 Register
 
 ```bash
-flowlet register email@example.com password123
+flowlet register
 ```
 
 ### 🔓 Login
 
 ```bash
-flowlet login email@example.com password123
+flowlet login 
 ```
 
 ### 🚪 Logout
@@ -141,6 +144,8 @@ flowlet vars add myKey someValue
 flowlet vars rm myKey
 ```
 
+### 🪄 Use variable
+
 Then use ${myKey} anywhere in your saved command, like:
 
 ```bash
@@ -151,11 +156,9 @@ curl -H "Authorization: Bearer ${myKey}"
 
 Flowlet uses detect-secrets to scan for common secrets before saving commands.
 
-Warns before saving
-
-Shows what was detected
-
-Lets you approve or reject
+- Warns before saving
+- Shows what was detected
+- Lets you approve or reject
 
 ## 🛠 Developer Setup
 
@@ -167,7 +170,7 @@ source venv/bin/activate
 pip install -e .
 ```
 
-Ensure you have a `deeb-server` running with the rules from `./server_rules.rhai`
+Ensure you have a `deeb-server` running with the rules from `./server_rules.rhai`. Instructions coming soon!
 
 ## 📄 License
 
