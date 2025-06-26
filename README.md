@@ -171,7 +171,7 @@ Ensure you have a `deeb-server` running with the rules from `./server_rules.rhai
 
 ## 📄 License
 
-MIT © [Your Name]
+MIT © The Devoyage
 
 ## 💬 Feedback
 
