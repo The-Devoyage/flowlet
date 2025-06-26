@@ -53,6 +53,26 @@ def save_vars(vars_data):
     vars_file.write_text(json.dumps(vars_data, indent=2))
 
 
+def remove_var(name: str):
+    vars_file = Path.home() / VARS_FILE
+
+    if not vars_file.exists():
+        print("⚠️  No vars file found.")
+        return
+
+    try:
+        vars_data = json.loads(vars_file.read_text())
+
+        if name in vars_data:
+            del vars_data[name]
+            vars_file.write_text(json.dumps(vars_data, indent=2))
+            click.secho(f"🗑️ Removed variable '{name}'", fg="yellow")
+        else:
+            print(f"❌ Variable '{name}' not found.")
+    except json.JSONDecodeError:
+        print("❌ Failed to read vars file. Is it corrupted?")
+
+
 def inject_vars(cmd, vars_data):
     def replacer(match):
         var_name = match.group(1)
@@ -149,7 +169,7 @@ def contains_secrets(text: str) -> bool:
     """
     with tempfile.NamedTemporaryFile(mode="w+", delete=True) as tmp:
         tmp.write(text)
-        tmp.flush()  
+        tmp.flush()
 
         secrets = SecretsCollection()
         with default_settings():
