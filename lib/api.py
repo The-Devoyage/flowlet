@@ -72,7 +72,7 @@ def register(email: str, password: str):
     """Register on the remote server."""
     try:
         response = requests.post(
-            "{SERVER_URL}/auth/register",
+            f"{SERVER_URL}/auth/register",
             json={"email": email, "password": password},
             timeout=5,
         )
