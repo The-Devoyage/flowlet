@@ -30,16 +30,21 @@ pub enum RootCommands {
 pub enum Commands {
     /// Run a saved command
     Run {
+        #[arg(required = true)]
         name: String,
     },
     /// Save a command
     Save {
+        #[arg(required = true)]
         name: String,
         #[arg(required = true)]
         cmd: String, // handles multi-word shell command
     },
     // List local commands
     Ls,
+    Show {
+        name: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -48,10 +53,18 @@ pub enum Vars {
     Ls,
 
     /// Add a variable
-    Add { key: String, value: String },
+    Add {
+        #[arg(required = true)]
+        key: String,
+        #[arg(required = true)]
+        value: String,
+    },
 
     /// Remove a variable
-    Rm { key: String },
+    Rm {
+        #[arg(required = true)]
+        key: String,
+    },
 }
 
 #[derive(Subcommand)]

@@ -21,6 +21,7 @@ impl<'a> App<'a> {
                     crate::cli::command::Command::save(self, name, cmd).await
                 }
                 Commands::Ls => crate::cli::command::Command::list(self).await,
+                Commands::Show { name } => crate::cli::command::Command::show(self, name).await,
             },
             RootCommands::Vars(vars) => match vars {
                 Vars::Ls => {

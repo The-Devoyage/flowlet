@@ -130,4 +130,23 @@ impl Command {
 
         Ok(())
     }
+
+    pub async fn show(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+        let command = models::command::Command::read(
+            ctx.get(),
+            ReadCommandInput {
+                query: Query::eq("name", name),
+            },
+        )
+        .await?;
+
+        let command = match command {
+            Some(c) => c,
+            None => return Err(Box::new(CliCommandError::CommandNotFound)),
+        };
+
+        Printer::info(&command.name, &command.cmd);
+
+        Ok(())
+    }
 }
