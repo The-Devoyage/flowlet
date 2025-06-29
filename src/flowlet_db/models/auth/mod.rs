@@ -17,8 +17,8 @@ pub struct Auth {
 pub enum AuthError {
     #[error("Failed to login user.")]
     LoginFailed,
-    #[error("Update not supported.")]
-    UpdateNotSupported,
+    #[error("Call not supported.")]
+    CallNotSupported,
     #[error("Failed to find auth.")]
     AuthReadFailed,
     #[error("Auth object not found.")]
@@ -86,13 +86,16 @@ impl Api for Auth {
     }
 
     type UpdateInput = EmptyData;
-
     async fn update(_: &FlowletContext, _: Self::UpdateInput) -> FlowletResult<Self> {
-        return Err(Box::new(AuthError::UpdateNotSupported));
+        return Err(Box::new(AuthError::CallNotSupported));
+    }
+
+    type ListInput = EmptyData;
+    async fn list(_: &FlowletContext, _: Self::ListInput) -> FlowletResult<Vec<Self>> {
+        return Err(Box::new(AuthError::CallNotSupported));
     }
 
     type ReadInput = EmptyData;
-
     async fn read(
         flowlet_context: &FlowletContext,
         _: Self::ReadInput,

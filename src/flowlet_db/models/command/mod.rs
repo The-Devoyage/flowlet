@@ -33,10 +33,17 @@ pub enum CommandApiError {
 
     #[error("Failed to read command.")]
     ReadCommandFailed,
+
+    #[error("Failed to list commands")]
+    ListCommandsFailed,
 }
 
 #[derive(Serialize)]
 pub struct ReadCommandInput {
+    pub query: Query,
+}
+#[derive(Serialize)]
+pub struct ListCommandInput {
     pub query: Query,
 }
 
@@ -145,6 +152,35 @@ impl Api for Command {
             .map_err(|e| {
                 log::error!("{:?}", e);
                 CommandApiError::ReadCommandFailed
+            })?;
+
+        Ok(command.data)
+    }
+
+    type ListInput = ReadCommandInput;
+    async fn list(
+        flowlet_context: &FlowletContext,
+        input: Self::ReadInput,
+    ) -> FlowletResult<Vec<Self>> {
+        let deeb = &flowlet_context.flowlet_db.deeb;
+        let client = &flowlet_context.api_client;
+
+        let local_commands = Command::find_many(deeb, input.query.clone(), None, None)
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                CommandApiError::ListCommandsFailed
+            })?;
+
+        let remote_commands = client
+            .post::<serde_json::Value, Vec<Command>>(
+                "/find-many/command",
+                &json!({"query": input.query}),
+            )
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                CommandApiError::ListCommandsFailed
             })?;
 
         Ok(command.data)

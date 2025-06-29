@@ -27,4 +27,10 @@ pub trait Api: Sized {
         flowlet_context: &FlowletContext,
         input: Self::ReadInput,
     ) -> FlowletResult<Option<Self>>;
+
+    type ListInput: Serialize;
+    async fn list(
+        flowlet_context: &FlowletContext,
+        input: Self::ListInput,
+    ) -> FlowletResult<Vec<Self>>;
 }
