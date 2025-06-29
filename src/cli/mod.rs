@@ -41,7 +41,10 @@ pub enum Commands {
         cmd: String, // handles multi-word shell command
     },
     // List local commands
-    Ls,
+    Ls {
+        #[arg(long)]
+        remote: bool,
+    },
     Show {
         name: String,
     },

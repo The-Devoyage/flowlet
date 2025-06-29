@@ -20,7 +20,7 @@ impl<'a> App<'a> {
                 Commands::Save { name, cmd } => {
                     crate::cli::command::Command::save(self, name, cmd).await
                 }
-                Commands::Ls => crate::cli::command::Command::list(self).await,
+                Commands::Ls { remote } => crate::cli::command::Command::list(self, remote).await,
                 Commands::Show { name } => crate::cli::command::Command::show(self, name).await,
             },
             RootCommands::Vars(vars) => match vars {

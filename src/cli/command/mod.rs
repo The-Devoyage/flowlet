@@ -65,11 +65,12 @@ impl Command {
         Ok(())
     }
 
-    pub async fn list(ctx: &impl WithContext) -> FlowletResult<()> {
+    pub async fn list(ctx: &impl WithContext, remote: bool) -> FlowletResult<()> {
         let commands = models::command::Command::list(
             ctx.get(),
             ListCommandInput {
                 query: deeb::Query::All,
+                remote,
             },
         )
         .await?;
@@ -79,7 +80,7 @@ impl Command {
             .map(|cmd| vec![cmd.name, cmd.cmd])
             .collect();
 
-        Printer::success("Command", "Found commands!");
+        Printer::success("Success", "Found commands!");
         Printer::table(vec!["Name", "Command"], rows);
         Ok(())
     }
@@ -103,7 +104,7 @@ impl Command {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
-        Printer::success("Command", "Running command...");
+        Printer::info(&command.name, &command.cmd);
 
         let status = tokio::process::Command::new("sh")
             .arg("-c")

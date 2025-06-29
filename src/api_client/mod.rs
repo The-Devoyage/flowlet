@@ -15,7 +15,7 @@ enum ApiClientError {
     #[error("Failed to parse Base Server URL.")]
     UrlParseError,
 
-    #[error("Failed to POST: {0}")]
+    #[error("{0}")]
     PostError(String),
 }
 
@@ -50,20 +50,21 @@ impl ApiClient {
             ApiClientError::PostError(e.to_string())
         })?;
         let status = response.status();
-
-        if !status.is_success() {
-            log::error!("Network request failed with status: {}", status);
-            return Err(Box::new(ApiClientError::PostError(format!(
-                "Network request failed with status: {}",
-                status
-            ))));
-        }
-
         let body = response.text().await.unwrap_or_default();
+
         let parsed: ApiResponse<K> = serde_json::from_str(&body).map_err(|e| {
             log::error!("{:?}", e);
+            log::trace!("{:?}", body);
             ApiClientError::PostError("Failed to serialize json.".to_string())
         })?;
+
+        if !status.is_success() {
+            return Err(Box::new(ApiClientError::PostError(
+                parsed
+                    .message
+                    .unwrap_or(format!("Failed with a status of {}.", status)),
+            )));
+        }
 
         Ok(parsed)
     }

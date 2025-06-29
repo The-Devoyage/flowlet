@@ -1,5 +1,6 @@
 use deeb::*;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use thiserror::Error;
 
 use crate::{flowlet_context::FlowletContext, printer::Printer, util::FlowletResult};
@@ -48,6 +49,7 @@ pub struct ReadCommandInput {
 #[derive(Serialize)]
 pub struct ListCommandInput {
     pub query: Query,
+    pub remote: bool,
 }
 
 impl Api for Command {
@@ -142,6 +144,25 @@ impl Api for Command {
         input: Self::ListInput,
     ) -> FlowletResult<Vec<Self>> {
         let deeb = &flowlet_context.flowlet_db.deeb;
+        let client = &flowlet_context.api_client;
+
+        if input.remote {
+            Printer::info("☁️  Remote", "Fetching commands...");
+            let commands = client
+                .post::<_, Vec<Command>>(
+                    "/find-many/command",
+                    &json!({"query": Query::All}),
+                )
+                .await?;
+
+            if commands.data.is_none() {
+                log::error!("Commands data not found.");
+                return Err(Box::new(CommandApiError::NoCommandsFound));
+            }
+
+            return Ok(commands.data.unwrap());
+        }
+        Printer::info("📭 Local", "Fetching commands...");
 
         let commands = Command::find_many(deeb, input.query.clone(), None, None)
             .await

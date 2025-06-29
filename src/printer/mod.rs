@@ -5,61 +5,44 @@ pub struct Printer;
 
 impl Printer {
     pub fn success(label: &str, message: &str) {
-        println!(
-            "{} {}",
-            Self::tag("SUCCESS", Color::BrightGreen, Color::Black),
-            Self::format(label, message)
-        );
+        println!("{} {}", label.green().bold(), message);
     }
 
     pub fn error(label: &str, message: &str) {
-        eprintln!(
-            "{} {}",
-            Self::tag("ERROR", Color::Red, Color::White),
-            Self::format(label, message)
-        );
+        eprintln!("{} {}", label.red().bold(), message);
     }
 
     pub fn warning(label: &str, message: &str) {
-        println!(
-            "{} {}",
-            Self::tag("WARNING", Color::BrightYellow, Color::Black),
-            Self::format(label, message)
-        );
+        println!("{} {}", label.yellow().bold(), message);
     }
 
     pub fn info(label: &str, message: &str) {
+        println!("{} {}", label.blue().bold(), message);
+    }
+
+    /// Prints a key-value pair aligned nicely
+    pub fn field(label: &str, value: &str) {
+        let pad = 14; // width for label column
         println!(
-            "{} {}",
-            Self::tag("INFO", Color::BrightBlue, Color::White),
-            Self::format(label, message)
+            "{}{}{}",
+            label.bold(),
+            ":".bold(),
+            format!("{:>width$}", value, width = pad - label.len())
         );
-    }
-
-    fn tag(text: &str, bg: Color, fg: Color) -> ColoredString {
-        format!(" {} ", text).on_color(bg).color(fg).bold()
-    }
-
-    fn format(label: &str, message: &str) -> String {
-        format!("{}: {}", label.bold(), message)
     }
 
     pub fn table(headers: Vec<&str>, rows: Vec<Vec<String>>) {
         let mut table = Table::new();
 
-        // Headers
         table.add_row(Row::new(
             headers
                 .into_iter()
-                .map(|h| Cell::new(h).style_spec("Fb"))
+                .map(|h| Cell::new(h).style_spec("bFc"))
                 .collect(),
         ));
 
-        // Rows
         for row in rows {
-            table.add_row(Row::new(
-                row.iter().map(|s| Cell::new(s.as_str())).collect(),
-            ));
+            table.add_row(Row::new(row.into_iter().map(|v| Cell::new(&v)).collect()));
         }
 
         table.printstd();
