@@ -1,6 +1,5 @@
 use deeb::*;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use thiserror::Error;
 
 use crate::{flowlet_context::FlowletContext, printer::Printer, util::FlowletResult};
@@ -11,19 +10,19 @@ use super::Api;
 pub struct Command {
     pub _id: ulid::Ulid,
     pub name: String,
-    pub cmd: Vec<String>,
+    pub cmd: String,
 }
 
 #[derive(Serialize)]
 pub struct CreateCommandInput {
     pub name: String,
-    pub cmd: Vec<String>,
+    pub cmd: String,
 }
 
 #[derive(Serialize)]
 pub struct UpdateCommandInput {
     pub name: String,
-    pub cmd: Vec<String>,
+    pub cmd: String,
 }
 
 #[derive(Debug, Error)]
@@ -34,14 +33,18 @@ pub enum CommandApiError {
     #[error("Failed to read command.")]
     ReadCommandFailed,
 
-    #[error("Failed to list commands")]
-    ListCommandsFailed,
+    #[error("No commands found.")]
+    NoCommandsFound,
+
+    #[error("Command not found.")]
+    CommandNotFound,
 }
 
 #[derive(Serialize)]
 pub struct ReadCommandInput {
     pub query: Query,
 }
+
 #[derive(Serialize)]
 pub struct ListCommandInput {
     pub query: Query,
@@ -88,7 +91,6 @@ impl Api for Command {
         input: Self::UpdateInput,
     ) -> FlowletResult<Self> {
         let deeb = &flowlet_context.flowlet_db.deeb;
-        let client = &flowlet_context.api_client;
 
         let query = Query::eq("name", input.name.clone());
 
@@ -108,20 +110,10 @@ impl Api for Command {
         })?;
 
         if command.is_none() {
-            return Err(Box::new(CommandApiError::SaveCommandFailed));
+            return Err(Box::new(CommandApiError::CommandNotFound));
         }
 
         let command = command.unwrap();
-
-        let _ = client
-            .post::<serde_json::Value, Command>(
-                "/update-one/command",
-                &json!({"document": command, "query": query}),
-            )
-            .await
-            .map_err(|_| {
-                Printer::error("Update Command", "Failed to sync command to remote server.")
-            });
 
         Ok(command)
     }
@@ -133,7 +125,6 @@ impl Api for Command {
         input: Self::ReadInput,
     ) -> FlowletResult<Option<Self>> {
         let deeb = &flowlet_context.flowlet_db.deeb;
-        let client = &flowlet_context.api_client;
 
         let command = Command::find_one(deeb, input.query.clone(), None)
             .await
@@ -142,47 +133,27 @@ impl Api for Command {
                 CommandApiError::ReadCommandFailed
             })?;
 
-        if command.is_some() {
-            return Ok(command);
-        }
+        Ok(command)
+    }
 
-        let command = client
-            .post::<serde_json::Value, Command>("/find-one/command", &json!({"query": input.query}))
+    type ListInput = ListCommandInput;
+    async fn list(
+        flowlet_context: &FlowletContext,
+        input: Self::ListInput,
+    ) -> FlowletResult<Vec<Self>> {
+        let deeb = &flowlet_context.flowlet_db.deeb;
+
+        let commands = Command::find_many(deeb, input.query.clone(), None, None)
             .await
             .map_err(|e| {
                 log::error!("{:?}", e);
                 CommandApiError::ReadCommandFailed
             })?;
 
-        Ok(command.data)
-    }
+        if commands.is_none() {
+            return Err(Box::new(CommandApiError::NoCommandsFound));
+        }
 
-    type ListInput = ReadCommandInput;
-    async fn list(
-        flowlet_context: &FlowletContext,
-        input: Self::ReadInput,
-    ) -> FlowletResult<Vec<Self>> {
-        let deeb = &flowlet_context.flowlet_db.deeb;
-        let client = &flowlet_context.api_client;
-
-        let local_commands = Command::find_many(deeb, input.query.clone(), None, None)
-            .await
-            .map_err(|e| {
-                log::error!("{:?}", e);
-                CommandApiError::ListCommandsFailed
-            })?;
-
-        let remote_commands = client
-            .post::<serde_json::Value, Vec<Command>>(
-                "/find-many/command",
-                &json!({"query": input.query}),
-            )
-            .await
-            .map_err(|e| {
-                log::error!("{:?}", e);
-                CommandApiError::ListCommandsFailed
-            })?;
-
-        Ok(command.data)
+        Ok(commands.unwrap())
     }
 }

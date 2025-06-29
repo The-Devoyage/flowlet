@@ -16,13 +16,11 @@ impl<'a> App<'a> {
     pub async fn run(&self, cli: crate::cli::Cli) -> FlowletResult<()> {
         match cli.root_commands {
             RootCommands::Command(commands) => match commands {
-                Commands::Run { name } => {
-                    println!("Running command: {}", name);
-                    Ok(())
-                }
+                Commands::Run { name } => crate::cli::command::Command::run(self, name).await,
                 Commands::Save { name, cmd } => {
                     crate::cli::command::Command::save(self, name, cmd).await
                 }
+                Commands::Ls => crate::cli::command::Command::list(self).await,
             },
             RootCommands::Vars(vars) => match vars {
                 Vars::Ls => {

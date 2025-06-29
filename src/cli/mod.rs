@@ -29,13 +29,17 @@ pub enum RootCommands {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Run a saved command
-    Run { name: String },
+    Run {
+        name: String,
+    },
     /// Save a command
     Save {
         name: String,
         #[arg(required = true)]
-        cmd: Vec<String>, // handles multi-word shell command
+        cmd: String, // handles multi-word shell command
     },
+    // List local commands
+    Ls,
 }
 
 #[derive(Subcommand)]

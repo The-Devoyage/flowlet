@@ -1,17 +1,35 @@
+use deeb::Query;
+use thiserror::Error;
+
 use crate::{
     flowlet_context::WithContext,
     flowlet_db::models::{
         self, Api,
-        command::{CreateCommandInput, ReadCommandInput, UpdateCommandInput},
+        command::{CreateCommandInput, ListCommandInput, ReadCommandInput, UpdateCommandInput},
     },
     printer::Printer,
     util::FlowletResult,
 };
 
+#[derive(Debug, Error)]
+pub enum CliCommandError {
+    #[error("Command not found.")]
+    CommandNotFound,
+
+    #[error("Empty command.")]
+    EmptyCommand,
+
+    #[error("Command execution failed.")]
+    CommandExecutionFailed,
+
+    #[error("Command exited with error: {0}")]
+    CommandExitedWithError(String),
+}
+
 pub struct Command;
 
 impl Command {
-    pub async fn save(ctx: &impl WithContext, name: String, cmd: Vec<String>) -> FlowletResult<()> {
+    pub async fn save(ctx: &impl WithContext, name: String, cmd: String) -> FlowletResult<()> {
         let command = models::command::Command::read(
             ctx.get(),
             ReadCommandInput {
@@ -44,6 +62,70 @@ impl Command {
             "Command",
             &format!("Saved your command. Run with `flowlet run {}`.", name),
         );
+        Ok(())
+    }
+
+    pub async fn list(ctx: &impl WithContext) -> FlowletResult<()> {
+        let commands = models::command::Command::list(
+            ctx.get(),
+            ListCommandInput {
+                query: deeb::Query::All,
+            },
+        )
+        .await?;
+
+        let rows: Vec<Vec<String>> = commands
+            .into_iter()
+            .map(|cmd| vec![cmd.name, cmd.cmd])
+            .collect();
+
+        Printer::success("Command", "Found commands!");
+        Printer::table(vec!["Name", "Command"], rows);
+        Ok(())
+    }
+
+    pub async fn run(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+        let command = models::command::Command::read(
+            ctx.get(),
+            ReadCommandInput {
+                query: Query::eq("name", name),
+            },
+        )
+        .await?;
+
+        let command = match command {
+            Some(c) => c,
+            None => return Err(Box::new(CliCommandError::CommandNotFound)),
+        };
+
+        // Make sure the command vector is not empty
+        if command.cmd.is_empty() {
+            return Err(Box::new(CliCommandError::EmptyCommand));
+        }
+
+        let status = tokio::process::Command::new("sh")
+            .arg("-c")
+            .arg(&command.cmd) // run it as a shell string
+            .spawn()
+            .map_err(|e| {
+                log::error!("Failed to spawn command: {:?}", e);
+                CliCommandError::CommandExecutionFailed
+            })?
+            .wait()
+            .await
+            .map_err(|e| {
+                log::error!("Failed to wait for command: {:?}", e);
+                CliCommandError::CommandExecutionFailed
+            })?;
+
+        if !status.success() {
+            return Err(Box::new(CliCommandError::CommandExitedWithError(
+                status
+                    .code()
+                    .map_or("unknown".to_string(), |code| code.to_string()),
+            )));
+        }
+
         Ok(())
     }
 }

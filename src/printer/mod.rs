@@ -1,4 +1,5 @@
 use colored::*;
+use prettytable::{Cell, Row, Table};
 
 pub struct Printer;
 
@@ -41,5 +42,26 @@ impl Printer {
 
     fn format(label: &str, message: &str) -> String {
         format!("{}: {}", label.bold(), message)
+    }
+
+    pub fn table(headers: Vec<&str>, rows: Vec<Vec<String>>) {
+        let mut table = Table::new();
+
+        // Headers
+        table.add_row(Row::new(
+            headers
+                .into_iter()
+                .map(|h| Cell::new(h).style_spec("Fb"))
+                .collect(),
+        ));
+
+        // Rows
+        for row in rows {
+            table.add_row(Row::new(
+                row.iter().map(|s| Cell::new(s.as_str())).collect(),
+            ));
+        }
+
+        table.printstd();
     }
 }

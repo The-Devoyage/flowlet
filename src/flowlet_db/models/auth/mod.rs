@@ -107,10 +107,6 @@ impl Api for Auth {
             AuthError::AuthReadFailed
         })?;
 
-        if auth.is_none() {
-            return Err(Box::new(AuthError::AuthNotFound));
-        }
-
         Ok(auth)
     }
 }
