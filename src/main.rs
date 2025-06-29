@@ -1,17 +1,17 @@
 use app::App;
 use clap::Parser;
 use cli::Cli;
-use colored::Colorize;
 use flowlet_context::FlowletContext;
+use printer::Printer;
 use util::FlowletResult;
 
+pub mod api_client;
 pub mod app;
 pub mod cli;
 pub mod flowlet_context;
 pub mod flowlet_db;
-pub mod util;
-pub mod api_client;
 pub mod printer;
+pub mod util;
 
 #[tokio::main]
 async fn main() -> FlowletResult<()> {
@@ -21,7 +21,7 @@ async fn main() -> FlowletResult<()> {
     let cli = Cli::parse();
 
     if let Err(e) = app.run(cli).await {
-        eprintln!("{}", e.to_string().red());
+        Printer::error("Error", &e.to_string());
     }
 
     Ok(())

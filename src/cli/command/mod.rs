@@ -16,8 +16,8 @@ pub enum CliCommandError {
     #[error("Command not found.")]
     CommandNotFound,
 
-    #[error("Empty command.")]
-    EmptyCommand,
+    #[error("No command found for alias `{0}`.")]
+    EmptyCommand(String),
 
     #[error("Command execution failed.")]
     CommandExecutionFailed,
@@ -100,8 +100,10 @@ impl Command {
 
         // Make sure the command vector is not empty
         if command.cmd.is_empty() {
-            return Err(Box::new(CliCommandError::EmptyCommand));
+            return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
+
+        Printer::success("Command", "Running command...");
 
         let status = tokio::process::Command::new("sh")
             .arg("-c")
