@@ -25,7 +25,7 @@ pub struct ApiResponse<T> {
     pub message: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmptyData;
 
 impl ApiClient {
@@ -52,6 +52,7 @@ impl ApiClient {
         let status = response.status();
 
         if !status.is_success() {
+            log::error!("Network request failed with status: {}", status);
             return Err(Box::new(ApiClientError::PostError(format!(
                 "Network request failed with status: {}",
                 status

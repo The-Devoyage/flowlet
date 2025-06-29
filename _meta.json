@@ -1,1 +1,1 @@
-{"_meta":[{"name":"auth","primary_key":"id","associations":[],"indexes":[]},{"name":"user","primary_key":"id","associations":[],"indexes":[]}]}
+{"_meta":[{"associations":[],"indexes":[],"name":"auth","primary_key":"id"},{"associations":[],"indexes":[],"name":"user","primary_key":"id"},{"associations":[],"indexes":[],"name":"command","primary_key":"id"}]}

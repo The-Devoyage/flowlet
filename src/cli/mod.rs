@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 pub mod auth;
+pub mod command;
 
 #[derive(Parser)]
 #[command(name = "flowlet")]

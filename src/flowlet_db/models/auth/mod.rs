@@ -3,7 +3,7 @@ use deeb::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{flowlet_context::FlowletContext, util::FlowletResult};
+use crate::{api_client::EmptyData, flowlet_context::FlowletContext, util::FlowletResult};
 
 use super::Api;
 
@@ -17,6 +17,12 @@ pub struct Auth {
 pub enum AuthError {
     #[error("Failed to login user.")]
     LoginFailed,
+    #[error("Update not supported.")]
+    UpdateNotSupported,
+    #[error("Failed to find auth.")]
+    AuthReadFailed,
+    #[error("Auth object not found.")]
+    AuthNotFound,
 }
 
 #[derive(Serialize)]
@@ -71,10 +77,36 @@ impl Api for Auth {
             _id: ulid::Ulid::new(),
             flowlet_token: res.data.unwrap().token,
         };
-        let auth = Auth::insert(&deeb, auth, None).await.map_err(|e| {
+        let auth = Auth::insert_one(&deeb, auth, None).await.map_err(|e| {
             log::error!("{:?}", e);
             AuthError::LoginFailed
         })?;
+
+        Ok(auth)
+    }
+
+    type UpdateInput = EmptyData;
+
+    async fn update(_: &FlowletContext, _: Self::UpdateInput) -> FlowletResult<Self> {
+        return Err(Box::new(AuthError::UpdateNotSupported));
+    }
+
+    type ReadInput = EmptyData;
+
+    async fn read(
+        flowlet_context: &FlowletContext,
+        _: Self::ReadInput,
+    ) -> FlowletResult<Option<Self>> {
+        let deeb = &flowlet_context.flowlet_db.deeb;
+
+        let auth = Auth::find_one(deeb, Query::All, None).await.map_err(|e| {
+            log::error!("{:?}", e);
+            AuthError::AuthReadFailed
+        })?;
+
+        if auth.is_none() {
+            return Err(Box::new(AuthError::AuthNotFound));
+        }
 
         Ok(auth)
     }

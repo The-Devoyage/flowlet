@@ -21,8 +21,7 @@ impl<'a> App<'a> {
                     Ok(())
                 }
                 Commands::Save { name, cmd } => {
-                    println!("Saving command '{}' with: {}", name, cmd.join(" "));
-                    Ok(())
+                    crate::cli::command::Command::save(self, name, cmd).await
                 }
             },
             RootCommands::Vars(vars) => match vars {

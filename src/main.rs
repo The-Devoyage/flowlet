@@ -11,6 +11,7 @@ pub mod flowlet_context;
 pub mod flowlet_db;
 pub mod util;
 pub mod api_client;
+pub mod printer;
 
 #[tokio::main]
 async fn main() -> FlowletResult<()> {

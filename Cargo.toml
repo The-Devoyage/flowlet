@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 clap = { version = "4.5.40", features = ["derive"] }
 colored = "3.0.0"
-deeb = "0.0.11"
+deeb = {version = "0.0.11", path = "../@the-devoyage/deeb/deeb"}
 dialoguer = "0.11.0"
 dirs = "6.0.0"
 log = "0.4.27"

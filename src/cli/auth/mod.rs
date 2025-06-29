@@ -6,6 +6,7 @@ use crate::{
     api_client::EmptyData,
     flowlet_context::WithContext,
     flowlet_db::models::{self, Api, auth::CreateAuthInput},
+    printer::Printer,
     util::FlowletResult,
 };
 
@@ -50,6 +51,7 @@ impl Auth {
         models::auth::Auth::create(ctx.get(), CreateAuthInput { email, password }).await?;
 
         println!("Login successful!");
+        Printer::success("Auth", "Login Successful!");
 
         Ok(())
     }
