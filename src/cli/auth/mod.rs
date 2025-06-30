@@ -5,8 +5,8 @@ use thiserror::Error;
 use crate::{
     api_client::EmptyData,
     flowlet_context::WithContext,
-    flowlet_db::models::{self, Api, auth::CreateAuthInput},
-    printer::Printer,
+    flowlet_db::models::{self, auth::CreateAuthInput, Api},
+    printer::{Icon, Printer},
     util::FlowletResult,
 };
 
@@ -51,7 +51,7 @@ impl Auth {
         models::auth::Auth::create(ctx.get(), CreateAuthInput { email, password }).await?;
 
         println!("Login successful!");
-        Printer::success("Auth", "Login Successful!");
+        Printer::success(Icon::Auth, "Welcome!", "Login Successful!");
 
         Ok(())
     }

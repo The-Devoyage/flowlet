@@ -3,7 +3,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use thiserror::Error;
 
-use crate::{flowlet_context::FlowletContext, printer::Printer, util::FlowletResult};
+use crate::{
+    flowlet_context::FlowletContext,
+    printer::{Icon, Printer},
+    util::FlowletResult,
+};
 
 use super::Api;
 
@@ -89,7 +93,11 @@ impl Api for Command {
             .post::<Command, Command>("/insert-one/command", &command)
             .await
             .map_err(|_| {
-                Printer::error("Save Command", "Failed to save command to remote server.")
+                Printer::error(
+                    Icon::Cloud,
+                    "Save Command",
+                    "Failed to save command to remote server.",
+                )
             });
 
         Ok(command)
@@ -155,7 +163,7 @@ impl Api for Command {
         let client = &flowlet_context.api_client;
 
         if input.remote {
-            Printer::info("☁️  Remote", "Fetching commands...");
+            Printer::info(Icon::Cloud, "Remote", "Fetching commands...");
             let commands = client
                 .post::<_, Vec<Command>>("/find-many/command", &json!({"query": Query::All}))
                 .await?;
@@ -167,7 +175,7 @@ impl Api for Command {
 
             return Ok(commands.data.unwrap());
         }
-        Printer::info("📭 Local", "Fetching commands...");
+        Printer::info(Icon::Local, "Local", "Fetching commands...");
 
         let commands = Command::find_many(deeb, input.query.clone(), None, None)
             .await
@@ -191,7 +199,7 @@ impl Api for Command {
         let deeb = &flowlet_context.flowlet_db.deeb;
         let client = &flowlet_context.api_client;
 
-        Printer::warning("Warning", &format!("Removing command: `{}`", input.name));
+        Printer::warning(Icon::Warning, "Warning", &format!("Removing command: `{}`", input.name));
 
         let query = Query::eq("name", input.name);
 
@@ -206,7 +214,7 @@ impl Api for Command {
         // If command on remote is not found, the DB throws error
         if success.is_err() {
             log::error!("Failed to delete command from remote.");
-            Printer::warning("Remote Failed", "Command on remote not found.");
+            Printer::warning(Icon::Cloud, "Remote Failed", "Command on remote not found.");
         }
 
         let commands = Command::delete_one(deeb, query, None).await.map_err(|e| {
@@ -216,7 +224,7 @@ impl Api for Command {
 
         // If command on remote is not found, the DB throws error
         if commands.is_err() {
-            Printer::warning("Local Failed", "Command on local not found.")
+            Printer::warning(Icon::Local, "Local Failed", "Command on local not found.")
         }
 
         if commands.as_ref().unwrap().is_none() {

@@ -2,7 +2,7 @@ use app::App;
 use clap::Parser;
 use cli::Cli;
 use flowlet_context::FlowletContext;
-use printer::Printer;
+use printer::{Icon, Printer};
 use util::FlowletResult;
 
 pub mod api_client;
@@ -21,7 +21,7 @@ async fn main() -> FlowletResult<()> {
     let cli = Cli::parse();
 
     if let Err(e) = app.run(cli).await {
-        Printer::error("Error", &e.to_string());
+        Printer::error(Icon::Error, "Error", &e.to_string());
     }
 
     Ok(())

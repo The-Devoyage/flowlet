@@ -1,30 +1,92 @@
 use colored::*;
 use prettytable::{Cell, Row, Table};
 
+pub enum Icon {
+    Trash,
+    Cloud,
+    Local,
+    Success,
+    Error,
+    Warning,
+    Failure,
+    Info,
+    Auth,
+}
+
+impl Icon {
+    pub fn symbol(&self) -> &'static str {
+        match self {
+            Icon::Trash => "🗑️",
+            Icon::Cloud => "☁️",
+            Icon::Local => "💾",
+            Icon::Success => "✅",
+            Icon::Error => "❌",
+            Icon::Warning => "⚠️",
+            Icon::Failure => "💥",
+            Icon::Info => "ℹ️",
+            Icon::Auth => "🔐",
+        }
+    }
+
+    pub fn color(&self) -> Color {
+        match self {
+            Icon::Success => Color::Green,
+            Icon::Error => Color::Red,
+            Icon::Failure => Color::Red,
+            Icon::Warning => Color::Yellow,
+            Icon::Trash => Color::BrightBlack,
+            Icon::Cloud => Color::BrightBlue,
+            Icon::Local => Color::Cyan,
+            Icon::Info => Color::BrightBlue,
+            Icon::Auth => Color::Magenta,
+        }
+    }
+}
+
 pub struct Printer;
 
 impl Printer {
-    pub fn success(label: &str, message: &str) {
-        println!("{} {}", label.green().bold(), message);
-    }
-
-    pub fn error(label: &str, message: &str) {
-        eprintln!("{} {}", label.red().bold(), message);
-    }
-
-    pub fn warning(label: &str, message: &str) {
-        println!("{} {}", label.yellow().bold(), message);
-    }
-
-    pub fn info(label: &str, message: &str) {
-        println!("{} {}", label.blue().bold(), message);
-    }
-
-    /// Prints a key-value pair aligned nicely
-    pub fn field(label: &str, value: &str) {
-        let pad = 14; // width for label column
+    pub fn success(icon: Icon, label: &str, message: &str) {
         println!(
-            "{}{}{}",
+            "{} {} {}",
+            icon.symbol(),
+            label.color(icon.color()).bold(),
+            message
+        );
+    }
+
+    pub fn error(icon: Icon, label: &str, message: &str) {
+        eprintln!(
+            "{} {} {}",
+            icon.symbol(),
+            label.color(icon.color()).bold(),
+            message
+        );
+    }
+
+    pub fn warning(icon: Icon, label: &str, message: &str) {
+        println!(
+            "{} {} {}",
+            icon.symbol(),
+            label.color(icon.color()).bold(),
+            message
+        );
+    }
+
+    pub fn info(icon: Icon, label: &str, message: &str) {
+        println!(
+            "{} {} {}",
+            icon.symbol(),
+            label.color(icon.color()).bold(),
+            message
+        );
+    }
+
+    pub fn field(icon: Icon, label: &str, value: &str) {
+        let pad = 14;
+        println!(
+            "{} {}{}{}",
+            icon.symbol(),
             label.bold(),
             ":".bold(),
             format!("{:>width$}", value, width = pad - label.len())

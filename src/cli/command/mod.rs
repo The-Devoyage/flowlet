@@ -5,13 +5,12 @@ use thiserror::Error;
 use crate::{
     flowlet_context::WithContext,
     flowlet_db::models::{
-        self, Api,
-        command::{
+        self, command::{
             CreateCommandInput, ListCommandInput, ReadCommandInput, RemoveCommandInput,
             UpdateCommandInput,
-        },
+        }, Api
     },
-    printer::Printer,
+    printer::{Icon, Printer},
     util::FlowletResult,
 };
 
@@ -63,6 +62,7 @@ impl Command {
         }
 
         Printer::success(
+            Icon::Success,
             "Command",
             &format!("Saved your command. Run with `flowlet run {}`.", name),
         );
@@ -84,7 +84,7 @@ impl Command {
             .map(|cmd| vec![cmd.name, cmd.cmd])
             .collect();
 
-        Printer::success("Success", "Found commands!");
+        Printer::success(Icon::Success, "Success", "Found commands!");
         Printer::table(vec!["Name", "Command"], rows);
         Ok(())
     }
@@ -108,7 +108,7 @@ impl Command {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
-        Printer::info(&command.name, &command.cmd);
+        Printer::info(Icon::Info, &command.name, &command.cmd);
 
         let status = tokio::process::Command::new("sh")
             .arg("-c")
@@ -150,7 +150,7 @@ impl Command {
             None => return Err(Box::new(CliCommandError::CommandNotFound)),
         };
 
-        Printer::info(&command.name, &command.cmd);
+        Printer::info(Icon::Info, &command.name, &command.cmd);
 
         Ok(())
     }
@@ -171,7 +171,7 @@ impl Command {
         models::command::Command::remove(ctx.get(), RemoveCommandInput { name: name.clone() })
             .await?;
 
-        Printer::success(&"🗑️  Trashed", &format!("Command Removed: `{}`", name));
+        Printer::success(Icon::Trash, "Trashed", &format!("Command Removed: `{}`", name));
 
         Ok(())
     }
