@@ -12,7 +12,7 @@ use crate::{
         },
     },
     printer::{Icon, Printer},
-    util::FlowletResult,
+    util::{FlowletResult, launch_editor},
 };
 
 #[derive(Debug, Error)]
@@ -109,11 +109,7 @@ impl Command {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
-        Printer::info(
-            Icon::Info,
-            "Running Command:",
-            &command.name
-        );
+        Printer::info(Icon::Info, "Running Command:", &command.name);
 
         let status = tokio::process::Command::new("sh")
             .arg("-c")
@@ -181,6 +177,29 @@ impl Command {
             "Trashed",
             &format!("Command Removed: `{}`", name),
         );
+
+        Ok(())
+    }
+
+    pub async fn edit(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+        let command = models::command::Command::read(
+            ctx.get(),
+            ReadCommandInput {
+                query: Query::eq("name", name.clone()),
+            },
+        )
+        .await?;
+
+        let command = match command {
+            Some(c) => c,
+            None => return Err(Box::new(CliCommandError::CommandNotFound)),
+        };
+
+        let text = launch_editor(&command.cmd)?;
+
+        Self::save(ctx, name, text).await?;
+
+        Printer::success(Icon::Success, "Saved", "Command has been updated.");
 
         Ok(())
     }

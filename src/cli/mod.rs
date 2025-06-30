@@ -51,6 +51,9 @@ pub enum Commands {
     Rm {
         name: String,
     },
+    Edit {
+        name: String,
+    },
 }
 
 #[derive(Subcommand)]
