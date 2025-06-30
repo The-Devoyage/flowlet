@@ -12,7 +12,7 @@ use crate::{
         },
     },
     printer::{Icon, Printer},
-    util::{FlowletResult, launch_editor},
+    util::{FlowletResult, clean_command, launch_editor},
 };
 
 #[derive(Debug, Error)]
@@ -109,11 +109,22 @@ impl Command {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
-        Printer::info(Icon::Info, "Running Command:", &command.name);
+        let cleaned_command = clean_command(&command.cmd.clone());
 
+        // Print rocket icon with info label
+        Printer::info(Icon::Rocket, "Running Command:", &command.name);
+        Printer::info(Icon::Rocket, "", &cleaned_command);
+
+        // Prepare headers and rows for your Printer::table
+        let headers = vec!["Name", "Command"];
+
+        let rows = vec![vec![command.name.clone(), command.cmd.clone()]];
+
+        // Use your existing Printer::table function
+        Printer::table(headers, rows);
         let status = tokio::process::Command::new("sh")
             .arg("-c")
-            .arg(&command.cmd) // run it as a shell string
+            .arg(&cleaned_command) // run it as a shell string
             .spawn()
             .map_err(|e| {
                 log::error!("Failed to spawn command: {:?}", e);
@@ -151,7 +162,12 @@ impl Command {
             None => return Err(Box::new(CliCommandError::CommandNotFound)),
         };
 
-        Printer::info(Icon::Info, &command.name, &command.cmd);
+        Printer::info(Icon::Rocket, "Show Command", &command.name);
+
+        let cleaned = clean_command(&command.cmd);
+        let cleaned_lines = cleaned.split('\n').collect::<Vec<&str>>();
+
+        Printer::multi_line_info("To run manually:", cleaned_lines);
 
         Ok(())
     }

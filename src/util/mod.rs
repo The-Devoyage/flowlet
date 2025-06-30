@@ -11,7 +11,16 @@ pub fn launch_editor(initial: &str) -> std::io::Result<String> {
     write!(file, "{}", initial)?;
 
     // Use $EDITOR or fallback
-    let editor = std::env::var("EDITOR").unwrap_or_else(|_| "vi".to_string());
+    let editor = std::env::var("EDITOR")
+    .unwrap_or_else(|_| {
+        if which::which("vim").is_ok() {
+            "vim".to_string()
+        } else if which::which("vi").is_ok() {
+            "vi".to_string()
+        } else {
+            "nano".to_string()
+        }
+    });
 
     // Open the editor
     let status = Command::new(editor).arg(file.path()).status()?;
@@ -30,3 +39,15 @@ pub fn launch_editor(initial: &str) -> std::io::Result<String> {
 
     Ok(content)
 }
+
+pub fn clean_command(raw: &str) -> String {
+    raw.lines()
+        .map(str::trim_end)        // remove trailing whitespace on each line
+        .collect::<Vec<_>>()
+        .join(" ")                 // join lines with space
+        .replace('\\', "")         // remove literal backslashes
+        .replace("  ", " ")        // collapse double spaces
+        .trim()                    // final trim
+        .to_string()
+}
+

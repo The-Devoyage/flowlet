@@ -42,10 +42,7 @@ impl<'a> App<'a> {
             RootCommands::Auth(auth) => match auth {
                 Auth::Login => crate::cli::auth::Auth::login(self).await,
                 Auth::Register => crate::cli::auth::Auth::register(self).await,
-                Auth::Logout => {
-                    println!("Ending session...");
-                    Ok(())
-                }
+                Auth::Logout => crate::cli::auth::Auth::logout(self).await
             },
         }
     }

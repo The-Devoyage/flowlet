@@ -13,6 +13,7 @@ pub enum Icon {
     Failure,
     Info,
     Auth,
+    Rocket,
 }
 
 impl Icon {
@@ -27,12 +28,14 @@ impl Icon {
             Icon::Failure => "💥",
             Icon::Info => "ℹ️",
             Icon::Auth => "🔐",
+            Icon::Rocket => "🚀",
         }
     }
 
     pub fn color(&self) -> Color {
         match self {
             Icon::Success => Color::Green,
+            Icon::Rocket => Color::Green,
             Icon::Error | Icon::Failure => Color::Red,
             Icon::Warning => Color::Yellow,
             Icon::Trash => Color::BrightBlack,
@@ -46,7 +49,9 @@ impl Icon {
     pub fn formatted(&self) -> String {
         match self {
             Icon::Cloud | Icon::Info => format!("{}   ", self.symbol()), // 3 spaces
-            Icon::Success | Icon::Trash | Icon::Auth => format!("{}  ", self.symbol()), // 2 spaces
+            Icon::Success | Icon::Trash | Icon::Auth | Icon::Rocket => {
+                format!("{}  ", self.symbol())
+            } // 2 spaces
             Icon::Warning | Icon::Failure | Icon::Error => format!("{}  ", self.symbol()),
             Icon::Local => format!("{}  ", self.symbol()),
         }
@@ -122,6 +127,26 @@ impl Printer {
         }
 
         table.printstd();
+    }
+
+    pub fn multi_line_info(label: &str, lines: Vec<&str>) {
+        println!("\n{}", label.bold());
+        for line in lines {
+            println!("{}", line.bright_white().bold());
+        }
+        println!();
+    }
+
+    pub fn multi_line_info_with_icon(icon: Icon, label: &str, lines: Vec<&str>) {
+        println!(
+            "\n{} {}\n",
+            icon.formatted(),
+            label.color(icon.color()).bold()
+        );
+        for line in lines {
+            println!("{}", line.bright_white().bold());
+        }
+        println!();
     }
 }
 

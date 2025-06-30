@@ -5,7 +5,7 @@ use thiserror::Error;
 use crate::{
     api_client::EmptyData,
     flowlet_context::WithContext,
-    flowlet_db::models::{self, auth::CreateAuthInput, Api},
+    flowlet_db::models::{self, Api, auth::CreateAuthInput},
     printer::{Icon, Printer},
     util::FlowletResult,
 };
@@ -16,6 +16,8 @@ pub struct Auth;
 pub enum AuthError {
     #[error("Failed to register user.")]
     RegisterFailed,
+    #[error("Logout failed.")]
+    LogoutFailed,
 }
 
 impl Auth {
@@ -53,6 +55,18 @@ impl Auth {
         println!("Login successful!");
         Printer::success(Icon::Auth, "Welcome!", "Login Successful!");
 
+        Ok(())
+    }
+
+    pub async fn logout(ctx: &impl WithContext) -> FlowletResult<()> {
+        models::auth::Auth::remove(ctx.get(), EmptyData)
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                AuthError::LogoutFailed
+            })?;
+
+        Printer::success(Icon::Auth, "Goodbye!", "You have been logged out.");
         Ok(())
     }
 }
