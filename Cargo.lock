@@ -486,12 +486,14 @@ dependencies = [
  "log",
  "pretty_env_logger",
  "prettytable",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
  "thiserror 2.0.12",
  "tokio",
  "ulid",
+ "unicode-width 0.2.1",
  "url",
 ]
 

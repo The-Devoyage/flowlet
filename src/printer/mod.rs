@@ -1,5 +1,7 @@
 use colored::*;
 use prettytable::{Cell, Row, Table};
+use regex;
+use unicode_width::UnicodeWidthStr;
 
 pub enum Icon {
     Trash,
@@ -31,14 +33,22 @@ impl Icon {
     pub fn color(&self) -> Color {
         match self {
             Icon::Success => Color::Green,
-            Icon::Error => Color::Red,
-            Icon::Failure => Color::Red,
+            Icon::Error | Icon::Failure => Color::Red,
             Icon::Warning => Color::Yellow,
             Icon::Trash => Color::BrightBlack,
             Icon::Cloud => Color::BrightBlue,
             Icon::Local => Color::Cyan,
             Icon::Info => Color::BrightBlue,
             Icon::Auth => Color::Magenta,
+        }
+    }
+
+    pub fn formatted(&self) -> String {
+        match self {
+            Icon::Cloud | Icon::Info => format!("{}   ", self.symbol()), // 3 spaces
+            Icon::Success | Icon::Trash | Icon::Auth => format!("{}  ", self.symbol()), // 2 spaces
+            Icon::Warning | Icon::Failure | Icon::Error => format!("{}  ", self.symbol()),
+            Icon::Local => format!("{}  ", self.symbol()),
         }
     }
 }
@@ -48,36 +58,36 @@ pub struct Printer;
 impl Printer {
     pub fn success(icon: Icon, label: &str, message: &str) {
         println!(
-            "{} {} {}",
-            icon.symbol(),
-            label.color(icon.color()).bold(),
+            "{}{} {}",
+            icon.formatted(),
+            pad_colored(label.color(icon.color()).bold(), 12),
             message
         );
     }
 
     pub fn error(icon: Icon, label: &str, message: &str) {
         eprintln!(
-            "{} {} {}",
-            icon.symbol(),
-            label.color(icon.color()).bold(),
+            "{}{} {}",
+            icon.formatted(),
+            pad_colored(label.color(icon.color()).bold(), 12),
             message
         );
     }
 
     pub fn warning(icon: Icon, label: &str, message: &str) {
         println!(
-            "{} {} {}",
-            icon.symbol(),
-            label.color(icon.color()).bold(),
+            "{}{} {}",
+            icon.formatted(),
+            pad_colored(label.color(icon.color()).bold(), 12),
             message
         );
     }
 
     pub fn info(icon: Icon, label: &str, message: &str) {
         println!(
-            "{} {} {}",
-            icon.symbol(),
-            label.color(icon.color()).bold(),
+            "{}{} {}",
+            icon.formatted(),
+            pad_colored(label.color(icon.color()).bold(), 12),
             message
         );
     }
@@ -85,8 +95,8 @@ impl Printer {
     pub fn field(icon: Icon, label: &str, value: &str) {
         let pad = 14;
         println!(
-            "{} {}{}{}",
-            icon.symbol(),
+            "{}{}{}{}",
+            icon.formatted(),
             label.bold(),
             ":".bold(),
             format!("{:>width$}", value, width = pad - label.len())
@@ -96,17 +106,37 @@ impl Printer {
     pub fn table(headers: Vec<&str>, rows: Vec<Vec<String>>) {
         let mut table = Table::new();
 
+        // Headers
         table.add_row(Row::new(
             headers
                 .into_iter()
-                .map(|h| Cell::new(h).style_spec("bFc"))
+                .map(|h| Cell::new(h).style_spec("Fb"))
                 .collect(),
         ));
 
+        // Rows
         for row in rows {
-            table.add_row(Row::new(row.into_iter().map(|v| Cell::new(&v)).collect()));
+            table.add_row(Row::new(
+                row.iter().map(|s| Cell::new(s.as_str())).collect(),
+            ));
         }
 
         table.printstd();
     }
+}
+
+/// Pads a colored string to a fixed display width using unicode-width
+fn pad_colored(text: ColoredString, width: usize) -> ColoredString {
+    let plain = strip_ansi_codes(&text.to_string());
+    let display_width = UnicodeWidthStr::width(plain.as_str());
+    let pad = width.saturating_sub(display_width);
+    format!("{}{}", text, " ".repeat(pad)).normal()
+}
+
+/// Strips ANSI escape codes from a string
+fn strip_ansi_codes(s: &str) -> String {
+    // Crude way to remove ANSI color codes: they all start with ESC [
+    // A more robust solution would use the `strip-ansi-escapes` crate
+    let re = regex::Regex::new(r"\x1B\[[0-9;]*[a-zA-Z]").unwrap();
+    re.replace_all(s, "").to_string()
 }

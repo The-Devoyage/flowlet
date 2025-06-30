@@ -5,10 +5,11 @@ use thiserror::Error;
 use crate::{
     flowlet_context::WithContext,
     flowlet_db::models::{
-        self, command::{
+        self, Api,
+        command::{
             CreateCommandInput, ListCommandInput, ReadCommandInput, RemoveCommandInput,
             UpdateCommandInput,
-        }, Api
+        },
     },
     printer::{Icon, Printer},
     util::FlowletResult,
@@ -108,7 +109,11 @@ impl Command {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
-        Printer::info(Icon::Info, &command.name, &command.cmd);
+        Printer::info(
+            Icon::Info,
+            "Running Command:",
+            &command.name
+        );
 
         let status = tokio::process::Command::new("sh")
             .arg("-c")
@@ -171,7 +176,11 @@ impl Command {
         models::command::Command::remove(ctx.get(), RemoveCommandInput { name: name.clone() })
             .await?;
 
-        Printer::success(Icon::Trash, "Trashed", &format!("Command Removed: `{}`", name));
+        Printer::success(
+            Icon::Trash,
+            "Trashed",
+            &format!("Command Removed: `{}`", name),
+        );
 
         Ok(())
     }

@@ -5,7 +5,7 @@ pub mod command;
 
 #[derive(Parser)]
 #[command(name = "flowlet")]
-#[command(about = "🌊 The CLI to manage developer flow")]
+#[command(about = "🌊 The CLI that encourages developer flow.")]
 pub struct Cli {
     #[command(subcommand)]
     pub root_commands: RootCommands,
