@@ -33,4 +33,10 @@ pub trait Api: Sized {
         flowlet_context: &FlowletContext,
         input: Self::ListInput,
     ) -> FlowletResult<Vec<Self>>;
+
+    type RemoveInput: Serialize;
+    async fn remove(
+        flowlet_context: &FlowletContext,
+        input: Self::RemoveInput,
+    ) -> FlowletResult<bool>;
 }

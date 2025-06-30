@@ -26,6 +26,11 @@ pub struct UpdateCommandInput {
     pub cmd: String,
 }
 
+#[derive(Serialize)]
+pub struct RemoveCommandInput {
+    pub name: String,
+}
+
 #[derive(Debug, Error)]
 pub enum CommandApiError {
     #[error("Failed to save command.")]
@@ -39,6 +44,9 @@ pub enum CommandApiError {
 
     #[error("Command not found.")]
     CommandNotFound,
+
+    #[error("Failed to delete command.")]
+    DeleteCommandFailed,
 }
 
 #[derive(Serialize)]
@@ -149,10 +157,7 @@ impl Api for Command {
         if input.remote {
             Printer::info("☁️  Remote", "Fetching commands...");
             let commands = client
-                .post::<_, Vec<Command>>(
-                    "/find-many/command",
-                    &json!({"query": Query::All}),
-                )
+                .post::<_, Vec<Command>>("/find-many/command", &json!({"query": Query::All}))
                 .await?;
 
             if commands.data.is_none() {
@@ -176,5 +181,49 @@ impl Api for Command {
         }
 
         Ok(commands.unwrap())
+    }
+
+    type RemoveInput = RemoveCommandInput;
+    async fn remove(
+        flowlet_context: &FlowletContext,
+        input: Self::RemoveInput,
+    ) -> FlowletResult<bool> {
+        let deeb = &flowlet_context.flowlet_db.deeb;
+        let client = &flowlet_context.api_client;
+
+        Printer::warning("Warning", &format!("Removing command: `{}`", input.name));
+
+        let query = Query::eq("name", input.name);
+
+        let success = client
+            .post::<_, bool>("/delete-one/command", &json!({"query": query}))
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                e
+            });
+
+        // If command on remote is not found, the DB throws error
+        if success.is_err() {
+            log::error!("Failed to delete command from remote.");
+            Printer::warning("Remote Failed", "Command on remote not found.");
+        }
+
+        let commands = Command::delete_one(deeb, query, None).await.map_err(|e| {
+            log::error!("{:?}", e);
+            CommandApiError::DeleteCommandFailed
+        });
+
+        // If command on remote is not found, the DB throws error
+        if commands.is_err() {
+            Printer::warning("Local Failed", "Command on local not found.")
+        }
+
+        if commands.as_ref().unwrap().is_none() {
+            log::error!("Failed to delete command from server.");
+            return Err(Box::new(CommandApiError::DeleteCommandFailed));
+        }
+
+        Ok(commands.unwrap().unwrap())
     }
 }

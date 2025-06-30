@@ -23,6 +23,9 @@ pub enum AuthError {
     AuthReadFailed,
     #[error("Auth object not found.")]
     AuthNotFound,
+
+    #[error("Failed to remove auth details.")]
+    RemoveAuthFailed,
 }
 
 #[derive(Serialize)]
@@ -108,5 +111,18 @@ impl Api for Auth {
         })?;
 
         Ok(auth)
+    }
+
+    type RemoveInput = EmptyData;
+    async fn remove(flowlet_context: &FlowletContext, _: Self::RemoveInput) -> FlowletResult<bool> {
+        let deeb = &flowlet_context.flowlet_db.deeb;
+        let success = Auth::delete_many(deeb, Query::All, None)
+            .await
+            .map_err(|e| {
+                log::error!("{:?}", e);
+                AuthError::RemoveAuthFailed
+            })?;
+
+        Ok(success.unwrap_or(false))
     }
 }

@@ -22,6 +22,7 @@ impl<'a> App<'a> {
                 }
                 Commands::Ls { remote } => crate::cli::command::Command::list(self, remote).await,
                 Commands::Show { name } => crate::cli::command::Command::show(self, name).await,
+                Commands::Rm { name } => crate::cli::command::Command::remove(self, name).await,
             },
             RootCommands::Vars(vars) => match vars {
                 Vars::Ls => {

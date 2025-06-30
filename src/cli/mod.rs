@@ -48,6 +48,9 @@ pub enum Commands {
     Show {
         name: String,
     },
+    Rm {
+        name: String,
+    },
 }
 
 #[derive(Subcommand)]

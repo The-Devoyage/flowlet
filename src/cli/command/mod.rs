@@ -1,11 +1,15 @@
 use deeb::Query;
+use dialoguer::Confirm;
 use thiserror::Error;
 
 use crate::{
     flowlet_context::WithContext,
     flowlet_db::models::{
         self, Api,
-        command::{CreateCommandInput, ListCommandInput, ReadCommandInput, UpdateCommandInput},
+        command::{
+            CreateCommandInput, ListCommandInput, ReadCommandInput, RemoveCommandInput,
+            UpdateCommandInput,
+        },
     },
     printer::Printer,
     util::FlowletResult,
@@ -147,6 +151,27 @@ impl Command {
         };
 
         Printer::info(&command.name, &command.cmd);
+
+        Ok(())
+    }
+
+    pub async fn remove(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+        let confirm = Confirm::new()
+            .with_prompt(format!("Are you sure you want to delete '{}'? [y/N]", name))
+            .default(false)
+            .interact()
+            .unwrap();
+
+        if !confirm {
+            println!("Aborted.");
+            return Ok(());
+        }
+
+        // Proceed with deletion
+        models::command::Command::remove(ctx.get(), RemoveCommandInput { name: name.clone() })
+            .await?;
+
+        Printer::success(&"🗑️  Trashed", &format!("Command Removed: `{}`", name));
 
         Ok(())
     }
