@@ -6,7 +6,7 @@ pub mod variable;
 
 #[derive(Parser)]
 #[command(name = "flowlet")]
-#[command(about = "🌊 The CLI that encourages developer flow.")]
+#[command(about = "🌊 The CLI for developer flow.")]
 pub struct Cli {
     #[command(subcommand)]
     pub root_commands: RootCommands,
@@ -25,6 +25,10 @@ pub enum RootCommands {
     /// Register, login, and  logout.
     #[command(subcommand)]
     Auth(Auth),
+
+    /// Catch-all for unknown commands
+    #[command(external_subcommand)]
+    Unknown(Vec<String>),
 }
 
 #[derive(Subcommand)]

@@ -1,6 +1,7 @@
 use crate::cli::{Auth, Commands, RootCommands, Vars};
 use crate::cli::{command::Command, variable::Variable};
 use crate::flowlet_context::{FlowletContext, WithContext};
+use crate::printer::{Icon, Printer};
 use crate::util::FlowletResult;
 
 pub struct App<'a> {
@@ -40,6 +41,24 @@ impl<'a> App<'a> {
                 Auth::Register => crate::cli::auth::Auth::register(self).await,
                 Auth::Logout => crate::cli::auth::Auth::logout(self).await,
             },
+            RootCommands::Unknown(args) => {
+                if args.is_empty() {
+                    Printer::error(Icon::Error, "Error", "No command provided.");
+                    Ok(())
+                } else if args.len() > 1 {
+                    Printer::error(
+                        Icon::Error,
+                        "Error",
+                        &format!("Multiple arguments detected. Please use the proper command syntax: `flowlet command run {:?} ...`", args.first()),
+                    );
+                    Ok(())
+                } else if let Some(name) = args.first() {
+                    Command::run(self, name.clone(), None, None).await
+                } else {
+                    Printer::error(Icon::Error, "Error", "No command provided.");
+                    Ok(())
+                }
+            }
         }
     }
 }
