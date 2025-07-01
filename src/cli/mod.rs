@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 
 pub mod auth;
 pub mod command;
+pub mod variable;
 
 #[derive(Parser)]
 #[command(name = "flowlet")]
@@ -32,6 +33,12 @@ pub enum Commands {
     Run {
         #[arg(required = true)]
         name: String,
+
+        #[arg(long)]
+        save_var: Option<String>,
+
+        #[arg(long)]
+        json_path: Option<String>,
     },
     /// Save a command
     Save {

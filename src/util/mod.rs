@@ -11,8 +11,7 @@ pub fn launch_editor(initial: &str) -> std::io::Result<String> {
     write!(file, "{}", initial)?;
 
     // Use $EDITOR or fallback
-    let editor = std::env::var("EDITOR")
-    .unwrap_or_else(|_| {
+    let editor = std::env::var("EDITOR").unwrap_or_else(|_| {
         if which::which("vim").is_ok() {
             "vim".to_string()
         } else if which::which("vi").is_ok() {
@@ -42,12 +41,22 @@ pub fn launch_editor(initial: &str) -> std::io::Result<String> {
 
 pub fn clean_command(raw: &str) -> String {
     raw.lines()
-        .map(str::trim_end)        // remove trailing whitespace on each line
+        .map(str::trim_end) // remove trailing whitespace on each line
         .collect::<Vec<_>>()
-        .join(" ")                 // join lines with space
-        .replace('\\', "")         // remove literal backslashes
-        .replace("  ", " ")        // collapse double spaces
-        .trim()                    // final trim
+        .join(" ") // join lines with space
+        .replace('\\', "") // remove literal backslashes
+        .replace("  ", " ") // collapse double spaces
+        .trim() // final trim
         .to_string()
 }
 
+pub fn extract_json_path<'a>(
+    value: &'a serde_json::Value,
+    path: &str,
+) -> Option<&'a serde_json::Value> {
+    let mut current = value;
+    for key in path.split('.') {
+        current = current.get(key)?;
+    }
+    Some(current)
+}

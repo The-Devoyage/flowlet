@@ -1,4 +1,5 @@
 use crate::cli::{Auth, Commands, RootCommands, Vars};
+use crate::cli::{command::Command, variable::Variable};
 use crate::flowlet_context::{FlowletContext, WithContext};
 use crate::util::FlowletResult;
 
@@ -16,30 +17,23 @@ impl<'a> App<'a> {
     pub async fn run(&self, cli: crate::cli::Cli) -> FlowletResult<()> {
         match cli.root_commands {
             RootCommands::Command(commands) => match commands {
-                Commands::Run { name } => crate::cli::command::Command::run(self, name).await,
-                Commands::Save { name, cmd } => {
-                    crate::cli::command::Command::save(self, name, cmd).await
-                }
-                Commands::Ls { remote } => crate::cli::command::Command::list(self, remote).await,
-                Commands::Show { name } => crate::cli::command::Command::show(self, name).await,
-                Commands::Rm { name } => crate::cli::command::Command::remove(self, name).await,
-                Commands::Edit { name } => crate::cli::command::Command::edit(self, name).await,
-                Commands::Push { name } => crate::cli::command::Command::push(self, name).await,
-                Commands::Pull { name } => crate::cli::command::Command::pull(self, name).await,
+                Commands::Run {
+                    name,
+                    save_var,
+                    json_path,
+                } => Command::run(self, name, save_var, json_path).await,
+                Commands::Save { name, cmd } => Command::save(self, name, cmd).await,
+                Commands::Ls { remote } => Command::list(self, remote).await,
+                Commands::Show { name } => Command::show(self, name).await,
+                Commands::Rm { name } => Command::remove(self, name).await,
+                Commands::Edit { name } => Command::edit(self, name).await,
+                Commands::Push { name } => Command::push(self, name).await,
+                Commands::Pull { name } => Command::pull(self, name).await,
             },
             RootCommands::Vars(vars) => match vars {
-                Vars::Ls => {
-                    println!("Listing variables...");
-                    Ok(())
-                }
-                Vars::Add { key, value } => {
-                    println!("Adding variable '{}' with value '{}'", key, value);
-                    Ok(())
-                }
-                Vars::Rm { key } => {
-                    println!("Removing variable '{}'", key);
-                    Ok(())
-                }
+                Vars::Ls => Variable::list(self).await,
+                Vars::Add { key, value } => Variable::add(self, key, value).await,
+                Vars::Rm { key } => Variable::remove(self, key).await,
             },
             RootCommands::Auth(auth) => match auth {
                 Auth::Login => crate::cli::auth::Auth::login(self).await,

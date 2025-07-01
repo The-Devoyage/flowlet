@@ -35,6 +35,18 @@ pub struct RemoveCommandInput {
     pub name: String,
 }
 
+#[derive(Serialize)]
+pub struct ReadCommandInput {
+    pub query: Query,
+    pub remote: bool,
+}
+
+#[derive(Serialize)]
+pub struct ListCommandInput {
+    pub query: Query,
+    pub remote: bool,
+}
+
 #[derive(Debug, Error)]
 pub enum CommandApiError {
     #[error("Failed to save command.")]
@@ -54,18 +66,6 @@ pub enum CommandApiError {
 
     #[error("Failed to delete command.")]
     DeleteCommandFailed,
-}
-
-#[derive(Serialize)]
-pub struct ReadCommandInput {
-    pub query: Query,
-    pub remote: bool,
-}
-
-#[derive(Serialize)]
-pub struct ListCommandInput {
-    pub query: Query,
-    pub remote: bool,
 }
 
 impl Api for Command {

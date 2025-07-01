@@ -10,9 +10,10 @@ use crate::{
             CreateCommandInput, ListCommandInput, ReadCommandInput, RemoveCommandInput,
             UpdateCommandInput,
         },
+        variable::{ReadVariableInput, UpdateVariableInput},
     },
     printer::{Icon, Printer},
-    util::{FlowletResult, clean_command, launch_editor},
+    util::{FlowletResult, clean_command, extract_json_path, launch_editor},
 };
 
 #[derive(Debug, Error)]
@@ -91,11 +92,18 @@ impl Command {
         Ok(())
     }
 
-    pub async fn run(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+    pub async fn run(
+        ctx: &impl WithContext,
+        name: String,
+        save_var: Option<String>,
+        json_path: Option<String>,
+    ) -> FlowletResult<()> {
+        use crate::flowlet_db::models::variable::{CreateVariableInput, Variable};
+
         let command = models::command::Command::read(
             ctx.get(),
             ReadCommandInput {
-                query: Query::eq("name", name),
+                query: Query::eq("name", name.clone()),
                 remote: false,
             },
         )
@@ -106,45 +114,111 @@ impl Command {
             None => return Err(Box::new(CliCommandError::CommandNotFound)),
         };
 
-        // Make sure the command vector is not empty
         if command.cmd.is_empty() {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
         let cleaned_command = clean_command(&command.cmd.clone());
 
-        // Print rocket icon with info label
         Printer::info(Icon::Rocket, "Running Command:", &command.name);
-        Printer::info(Icon::Rocket, "", &cleaned_command);
 
-        // Prepare headers and rows for your Printer::table
-        let headers = vec!["Name", "Command"];
-
-        let rows = vec![vec![command.name.clone(), command.cmd.clone()]];
-
-        // Use your existing Printer::table function
-        Printer::table(headers, rows);
-        let status = tokio::process::Command::new("sh")
+        // Capture output
+        let output = tokio::process::Command::new("sh")
             .arg("-c")
-            .arg(&cleaned_command) // run it as a shell string
-            .spawn()
-            .map_err(|e| {
-                log::error!("Failed to spawn command: {:?}", e);
-                CliCommandError::CommandExecutionFailed
-            })?
-            .wait()
+            .arg(&cleaned_command)
+            .output()
             .await
             .map_err(|e| {
-                log::error!("Failed to wait for command: {:?}", e);
+                log::error!("Failed to run command: {:?}", e);
                 CliCommandError::CommandExecutionFailed
             })?;
 
-        if !status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+        // 👇 Actually print the output
+        if !stdout.trim().is_empty() {
+            println!("{}", stdout);
+        }
+
+        if !stderr.trim().is_empty() {
+            eprintln!("{}", stderr);
+        }
+
+        if !output.status.success() {
             return Err(Box::new(CliCommandError::CommandExitedWithError(
-                status
+                output
+                    .status
                     .code()
                     .map_or("unknown".to_string(), |code| code.to_string()),
             )));
+        }
+
+        // If we want to save the result
+        if let Some(var_name) = save_var {
+            let exists = Variable::read(
+                ctx.get(),
+                ReadVariableInput {
+                    query: Query::eq("name", var_name.clone()),
+                },
+            )
+            .await?;
+
+            let value_to_save = if let Some(path) = json_path {
+                // Try to parse as JSON and extract value at path
+                match serde_json::from_str::<serde_json::Value>(&stdout) {
+                    Ok(json_value) => extract_json_path(&json_value, &path)
+                        .map(|v| v.to_string())
+                        .unwrap_or_else(|| {
+                            Printer::warning(
+                                Icon::Warning,
+                                "Path Not Found",
+                                "Falling back to full response.",
+                            );
+                            stdout.clone()
+                        }),
+                    Err(_) => {
+                        Printer::warning(
+                            Icon::Warning,
+                            "Invalid JSON",
+                            "Falling back to raw output.",
+                        );
+                        stdout.clone()
+                    }
+                }
+            } else {
+                stdout.clone()
+            };
+
+            match exists {
+                Some(_) => {
+                    Variable::update(
+                        ctx.get(),
+                        UpdateVariableInput {
+                            name: var_name.clone(),
+                            value: value_to_save.clone(),
+                        },
+                    )
+                    .await?;
+                }
+                None => {
+                    // Save to Variable
+                    Variable::create(
+                        ctx.get(),
+                        CreateVariableInput {
+                            name: var_name.clone(),
+                            value: value_to_save.clone(),
+                        },
+                    )
+                    .await?;
+                }
+            }
+
+            Printer::success(
+                Icon::Success,
+                "Saved Variable",
+                &format!("${} = {}", var_name, value_to_save),
+            );
         }
 
         Ok(())
