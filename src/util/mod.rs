@@ -1,3 +1,8 @@
+use crate::flowlet_context::WithContext;
+use crate::flowlet_db::models::variable::{ReadVariableInput, Variable};
+use crate::flowlet_db::models::Api;
+use crate::printer::{Icon, Printer};
+use regex::Regex;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::process::Command;
@@ -59,4 +64,33 @@ pub fn extract_json_path<'a>(
         current = current.get(key)?;
     }
     Some(current)
+}
+
+pub async fn inject_variables(ctx: &impl WithContext, command_str: &str) -> FlowletResult<String> {
+    let var_regex = Regex::new(r"\$\{([a-zA-Z0-9_]+)\}").unwrap();
+    let mut result = command_str.to_string();
+
+    for caps in var_regex.captures_iter(command_str) {
+        let var_name = &caps[1];
+
+        let var = Variable::read(
+            ctx.get(),
+            ReadVariableInput {
+                query: deeb::Query::eq("name", var_name.to_string()),
+            },
+        )
+        .await?;
+
+        if let Some(var) = var {
+            result = result.replace(&caps[0], &var.value);
+        } else {
+            Printer::warning(
+                Icon::Warning,
+                "Missing Variable",
+                &format!("${{{}}}", var_name),
+            );
+        }
+    }
+
+    Ok(result)
 }

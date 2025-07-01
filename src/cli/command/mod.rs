@@ -5,15 +5,13 @@ use thiserror::Error;
 use crate::{
     flowlet_context::WithContext,
     flowlet_db::models::{
-        self, Api,
-        command::{
+        self, command::{
             CreateCommandInput, ListCommandInput, ReadCommandInput, RemoveCommandInput,
             UpdateCommandInput,
-        },
-        variable::{ReadVariableInput, UpdateVariableInput},
+        }, variable::{ReadVariableInput, UpdateVariableInput}, Api
     },
     printer::{Icon, Printer},
-    util::{FlowletResult, clean_command, extract_json_path, launch_editor},
+    util::{clean_command, extract_json_path, inject_variables, launch_editor, FlowletResult},
 };
 
 #[derive(Debug, Error)]
@@ -118,7 +116,8 @@ impl Command {
             return Err(Box::new(CliCommandError::EmptyCommand(command.name)));
         }
 
-        let cleaned_command = clean_command(&command.cmd.clone());
+        let injected_command = inject_variables(ctx, &command.cmd).await?;
+        let cleaned_command = clean_command(&injected_command);
 
         Printer::info(Icon::Rocket, "Running Command:", &command.name);
 
@@ -136,7 +135,6 @@ impl Command {
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
 
-        // 👇 Actually print the output
         if !stdout.trim().is_empty() {
             println!("{}", stdout);
         }
