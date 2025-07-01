@@ -49,6 +49,9 @@ pub enum CommandApiError {
     #[error("Command not found.")]
     CommandNotFound,
 
+    #[error("Failed to update remote.")]
+    UpdateRemoteFailed,
+
     #[error("Failed to delete command.")]
     DeleteCommandFailed,
 }
@@ -56,6 +59,7 @@ pub enum CommandApiError {
 #[derive(Serialize)]
 pub struct ReadCommandInput {
     pub query: Query,
+    pub remote: bool,
 }
 
 #[derive(Serialize)]
@@ -109,6 +113,7 @@ impl Api for Command {
         input: Self::UpdateInput,
     ) -> FlowletResult<Self> {
         let deeb = &flowlet_context.flowlet_db.deeb;
+        let client = &flowlet_context.api_client;
 
         let query = Query::eq("name", input.name.clone());
 
@@ -133,25 +138,54 @@ impl Api for Command {
 
         let command = command.unwrap();
 
+        Printer::info(Icon::Local, "Success", "Command updated on local.");
+
+        // Update Remote
+        let remote_command = client
+            .post::<_, Command>(
+                "/update-one/command",
+                &json!({"query": query.clone(), "document": command}),
+            )
+            .await?;
+
+        if remote_command.data.is_none() {
+            log::error!("Command data not found.");
+            return Err(Box::new(CommandApiError::UpdateRemoteFailed));
+        }
+
         Ok(command)
     }
 
     type ReadInput = ReadCommandInput;
-
     async fn read(
         flowlet_context: &FlowletContext,
         input: Self::ReadInput,
     ) -> FlowletResult<Option<Self>> {
         let deeb = &flowlet_context.flowlet_db.deeb;
+        let client = &flowlet_context.api_client;
 
-        let command = Command::find_one(deeb, input.query.clone(), None)
-            .await
-            .map_err(|e| {
-                log::error!("{:?}", e);
-                CommandApiError::ReadCommandFailed
-            })?;
+        if input.remote {
+            Printer::info(Icon::Cloud, "Remote", "Fetching command...");
+            let command = client
+                .post::<_, Command>("/find-one/command", &json!({"query": input.query}))
+                .await?;
 
-        Ok(command)
+            if command.data.is_none() {
+                log::warn!("Command data not found.");
+                return Ok(None);
+            }
+
+            return Ok(command.data);
+        } else {
+            let command = Command::find_one(deeb, input.query.clone(), None)
+                .await
+                .map_err(|e| {
+                    log::error!("{:?}", e);
+                    CommandApiError::ReadCommandFailed
+                })?;
+
+            Ok(command)
+        }
     }
 
     type ListInput = ListCommandInput;
@@ -199,7 +233,11 @@ impl Api for Command {
         let deeb = &flowlet_context.flowlet_db.deeb;
         let client = &flowlet_context.api_client;
 
-        Printer::warning(Icon::Warning, "Warning", &format!("Removing command: `{}`", input.name));
+        Printer::warning(
+            Icon::Warning,
+            "Warning",
+            &format!("Removing command: `{}`", input.name),
+        );
 
         let query = Query::eq("name", input.name);
 

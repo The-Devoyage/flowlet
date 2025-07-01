@@ -38,6 +38,7 @@ impl Command {
             ctx.get(),
             ReadCommandInput {
                 query: deeb::Query::eq("name", name.clone()),
+                remote: false,
             },
         )
         .await?;
@@ -95,6 +96,7 @@ impl Command {
             ctx.get(),
             ReadCommandInput {
                 query: Query::eq("name", name),
+                remote: false,
             },
         )
         .await?;
@@ -153,6 +155,7 @@ impl Command {
             ctx.get(),
             ReadCommandInput {
                 query: Query::eq("name", name),
+                remote: false,
             },
         )
         .await?;
@@ -202,6 +205,7 @@ impl Command {
             ctx.get(),
             ReadCommandInput {
                 query: Query::eq("name", name.clone()),
+                remote: false,
             },
         )
         .await?;
@@ -216,6 +220,78 @@ impl Command {
         Self::save(ctx, name, text).await?;
 
         Printer::success(Icon::Success, "Saved", "Command has been updated.");
+
+        Ok(())
+    }
+
+    pub async fn push(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+        // Get the local command to push
+        let command = models::command::Command::read(
+            ctx.get(),
+            ReadCommandInput {
+                query: Query::eq("name", name.clone()),
+                remote: false,
+            },
+        )
+        .await?;
+
+        let command = match command {
+            Some(c) => c,
+            None => return Err(Box::new(CliCommandError::CommandNotFound)),
+        };
+
+        let remote = models::command::Command::read(
+            ctx.get(),
+            ReadCommandInput {
+                query: Query::eq("name", name.clone()),
+                remote: true,
+            },
+        )
+        .await?;
+
+        if remote.is_some() {
+            models::command::Command::update(
+                ctx.get(),
+                UpdateCommandInput {
+                    name: name.clone(),
+                    cmd: command.cmd,
+                },
+            )
+            .await?;
+        } else {
+            models::command::Command::create(
+                ctx.get(),
+                CreateCommandInput {
+                    name: name.clone(),
+                    cmd: command.cmd,
+                },
+            )
+            .await?;
+        }
+
+        Printer::success(Icon::Success, "Saved", "Pushed command to remote.");
+
+        Ok(())
+    }
+
+    pub async fn pull(ctx: &impl WithContext, name: String) -> FlowletResult<()> {
+        let command = models::command::Command::read(
+            ctx.get(),
+            ReadCommandInput {
+                query: Query::eq("name", name.clone()),
+                remote: true,
+            },
+        )
+        .await?;
+
+        let command = match command {
+            Some(c) => c,
+            None => return Err(Box::new(CliCommandError::CommandNotFound)),
+        };
+
+        Self::save(ctx, name, command.cmd).await?;
+
+        Printer::success(Icon::Success, "Saved", "Pushed command to remote.");
 
         Ok(())
     }

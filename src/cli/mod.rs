@@ -54,6 +54,12 @@ pub enum Commands {
     Edit {
         name: String,
     },
+    Push {
+        name: String,
+    },
+    Pull {
+        name: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -62,18 +68,10 @@ pub enum Vars {
     Ls,
 
     /// Add a variable
-    Add {
-        #[arg(required = true)]
-        key: String,
-        #[arg(required = true)]
-        value: String,
-    },
+    Add { key: String, value: String },
 
     /// Remove a variable
-    Rm {
-        #[arg(required = true)]
-        key: String,
-    },
+    Rm { key: String },
 }
 
 #[derive(Subcommand)]
