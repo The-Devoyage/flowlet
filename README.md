@@ -1,6 +1,7 @@
 # 🌊 Flowlet
 
-A modern and minimal command-line tool to save, run, organize, and sync your favorite shell commands (and more) — locally and in the cloud.
+A modern, minimal CLI tool designed to **persist your developer flow** — save, run, organize, and sync shell commands, variables, and workflows with ease. Flowlet helps you reduce friction, automate repeat tasks, and move seamlessly between local and cloud environments.
+
 
 ---
 
@@ -8,42 +9,29 @@ A modern and minimal command-line tool to save, run, organize, and sync your fav
 
 - 🔖 Save and organize reusable shell commands  
 - 🚀 Run saved commands with variable injection  
-- 🔐 Detect secrets before saving accidentally  
-- ☁️  Sync with a remote server
+- ☁️  Sync with Flowlet Cloud 
 - 🧠 Extract and save variables from command output  
 - 📁 Save, update, remove, and list commands & vars  
-- 🪄 Auto JSON correction for malformd data
-- 📤 Push/pull specific or all commands  
+- 📤 Push/pull commands from the cloud
 
-### Maybe Soon
+### 🧪 Maybe Soon
 
-- 📦 Pretty and modern terminal UI with `rich`  
-- ✅ Register/login with auth token handling  
-- 👥 Future support for notes, messaging, and collaboration  
+- 🗒️ Notes and annotations for commands
+- 👥 Collaboration and sharing (teams, permissions)
+- 📁 Projects for grouping related commands and variables
+- 🌎 Multiple environments (e.g. dev, staging, prod)
+- 🧭 Enhanced TUI mode for browsing, running, and editing
 
 ---
 
 ## 📦 Installation
 
-### 🐍 With pip (editable dev install)
+### 🦀 With Cargo
+
+Coming soon to crates.io... but for now, while in development ----
 
 ```bash
-git clone https://github.com/yourusername/flowlet.git
-cd flowlet
-python3 -m venv venv
-source venv/bin/activate
-pip install -e .
-```
-
-## 🧪 Requirements
-
-- Python 3.8+
-- `deeb-server` (if self hosted)
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
+cargo install --path .
 ```
 
 ## 🚦 Usage
@@ -54,13 +42,15 @@ pip install -r requirements.txt
 flowlet command save myCommand "curl -X GET https://api.example.com/data"
 ```
 
-If the command contains something that looks like a secret (API keys, tokens, passwords), you’ll get a warning with confirmation.
+It's advised not to save secrets, instead save them as variables (not synced to the cloud).
 
-### 📜 List saved commands
+### 📜 List Saved Commands
+
+Keep your commands at your fingertips — and fetch them from the cloud anytime.
 
 ```bash
 flowlet command ls
-flowlet command ls --remote  # Fetch from server
+flowlet command ls --remote  # Fetch from remote server
 ```
 
 ### 👀 Show a command
@@ -78,32 +68,32 @@ flowlet command run myCommand
 With options:
 
 ```bash
---arg "<extra args here>"
---save-var "token=auth.token"
+--save-var mySavedOutput --json-path "auth.token"
 ```
 
 Example:
 
 ```bash
-flowlet command run myCommand --save-var "token=auth.token"
+flowlet command run myCommand --save-var myFirstVar #Saves output from command as var.
+flowlet command run myCommand --save-var mySecondVar --json-path auth.token #Saves path from json
 ```
 
-This saves the variable to ~/.flowlet_vars.json, allowing it to be reused in other commands with ${token}-style placeholders.
+This saves the variable, allowing it to be reused in other commands with ${token}-style placeholders.
 
-**Hint**
+<!-- **Hint** -->
 
-You can run a command with a shorthand syntax:
+<!-- You can run a command with a shorthand syntax: -->
 
-```bash
-flowlet myCommand
-```
+<!-- ```bash -->
+<!-- flowlet myCommand -->
+<!-- ``` -->
 
 ### 🌐 Sync
 
-🔄 Pull all remote commands
+🔄 Pull a remote command by name
 
 ```bash
-flowlet command pull
+flowlet command pull myCommand
 ```
 
 ### 📤 Push a command by name
@@ -137,13 +127,13 @@ flowlet auth logout
 📋 List variables
 
 ```bash
-flowlet vars
+flowlet vars ls
 ```
 
 ### ➕ Add variable
 
 ```bash
-flowlet vars add myKey someValue
+flowlet vars set myKey someValue
 ```
 
 ### ❌ Remove variable
@@ -157,25 +147,15 @@ flowlet vars rm myKey
 Then use ${myKey} anywhere in your saved command, like:
 
 ```bash
-curl -H "Authorization: Bearer ${myKey}"
+curl -H "Authorization: Bearer ${myKey}" http://url.com
 ```
-
-### 🧠 Secrets Detection
-
-Flowlet uses detect-secrets to scan for common secrets before saving commands.
-
-- Warns before saving
-- Shows what was detected
-- Lets you approve or reject
 
 ## 🛠 Developer Setup
 
 ```bash
-git clone https://github.com/yourusername/flowlet.git
+git clone https://github.com/the-devoyage/flowlet.git
 cd flowlet
-python3 -m venv venv
-source venv/bin/activate
-pip install -e .
+cargo install --path .
 ```
 
 Ensure you have a `deeb-server` running with the rules from `./server_rules.rhai`. Instructions coming soon!

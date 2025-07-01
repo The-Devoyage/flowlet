@@ -75,7 +75,7 @@ pub enum Vars {
     Ls,
 
     /// Add a variable
-    Add { key: String, value: String },
+    Set { key: String, value: String },
 
     /// Remove a variable
     Rm { key: String },

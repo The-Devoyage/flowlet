@@ -32,7 +32,7 @@ impl<'a> App<'a> {
             },
             RootCommands::Vars(vars) => match vars {
                 Vars::Ls => Variable::list(self).await,
-                Vars::Add { key, value } => Variable::add(self, key, value).await,
+                Vars::Set { key, value } => Variable::add(self, key, value).await,
                 Vars::Rm { key } => Variable::remove(self, key).await,
             },
             RootCommands::Auth(auth) => match auth {
