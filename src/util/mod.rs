@@ -1,12 +1,14 @@
 use crate::flowlet_context::WithContext;
-use crate::flowlet_db::models::variable::{ReadVariableInput, Variable};
 use crate::flowlet_db::models::Api;
+use crate::flowlet_db::models::variable::{ReadVariableInput, Variable};
 use crate::printer::{Icon, Printer};
 use regex::Regex;
+use std::fs;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::process::Command;
 use tempfile::NamedTempFile;
+use toml::Value;
 
 pub type FlowletResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -93,4 +95,39 @@ pub async fn inject_variables(ctx: &impl WithContext, command_str: &str) -> Flow
     }
 
     Ok(result)
+}
+
+/// Walks up the directory tree to find a `flowlet.toml` file and returns the project name.
+pub fn find_project_config() -> std::io::Result<Option<String>> {
+    let mut dir = std::env::current_dir()?;
+
+    loop {
+        let config_path = dir.join("flowlet.toml");
+        if config_path.exists() {
+            let contents = fs::read_to_string(&config_path)?;
+
+            let parsed: Value = match toml::from_str(&contents) {
+                Ok(v) => v,
+                Err(err) => {
+                    eprintln!("❌ Failed to parse TOML: {err}");
+                    return Ok(None);
+                }
+            };
+
+
+            if let Some(project) = parsed.get("project") {
+                if let Some(name) = project.get("name").and_then(|v| v.as_str()) {
+                    return Ok(Some(name.to_string()));
+                }
+            }
+
+            return Ok(None);
+        }
+
+        if !dir.pop() {
+            break;
+        }
+    }
+
+    Ok(None)
 }

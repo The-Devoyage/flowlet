@@ -26,6 +26,11 @@ pub enum CliProjectError {
     DeleteFailed,
 }
 
+#[derive(Serialize)]
+struct FlowletConfig {
+    project: ProjectConfig,
+}
+
 #[derive(Serialize, Deserialize)]
 struct ProjectConfig {
     name: String,
@@ -72,16 +77,18 @@ impl ProjectCli {
         )
         .await?;
 
-        let config = ProjectConfig {
-            name,
-            description,
-            environment,
+        let config = FlowletConfig {
+            project: ProjectConfig {
+                name: name.clone(),
+                description,
+                environment,
+            },
         };
 
-        let rc_path = PathBuf::from("flowlet.toml");
+        // Serialize to TOML
         let rc_contents = toml::to_string_pretty(&config)?;
+        let rc_path = PathBuf::from("flowlet.toml");
         fs::write(&rc_path, rc_contents)?;
-
         Printer::success(
             Icon::Success,
             "Project",

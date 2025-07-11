@@ -16,12 +16,14 @@ pub struct Command {
     pub _id: ulid::Ulid,
     pub name: String,
     pub cmd: String,
+    pub project: Option<String>
 }
 
 #[derive(Serialize)]
 pub struct CreateCommandInput {
     pub name: String,
     pub cmd: String,
+    pub project: Option<String>
 }
 
 #[derive(Serialize)]
@@ -84,6 +86,7 @@ impl Api for Command {
                 _id: ulid::Ulid::new(),
                 name: input.name,
                 cmd: input.cmd,
+                project: input.project
             },
             None,
         )
@@ -262,14 +265,10 @@ impl Api for Command {
 
         // If command on remote is not found, the DB throws error
         if commands.is_err() {
-            Printer::warning(Icon::Local, "Local Failed", "Command on local not found.")
+            Printer::warning(Icon::Local, "Local Failed", "Command on local not found.");
+            return Ok(false);
         }
 
-        if commands.as_ref().unwrap().is_none() {
-            log::error!("Failed to delete command from server.");
-            return Err(Box::new(CommandApiError::DeleteCommandFailed));
-        }
-
-        Ok(commands.unwrap().unwrap())
+        Ok(commands.unwrap().unwrap_or(false))
     }
 }

@@ -5,13 +5,18 @@ use thiserror::Error;
 use crate::{
     flowlet_context::WithContext,
     flowlet_db::models::{
-        self, command::{
+        self, Api,
+        command::{
             CreateCommandInput, ListCommandInput, ReadCommandInput, RemoveCommandInput,
             UpdateCommandInput,
-        }, variable::{ReadVariableInput, UpdateVariableInput}, Api
+        },
+        variable::{ReadVariableInput, UpdateVariableInput},
     },
     printer::{Icon, Printer},
-    util::{clean_command, extract_json_path, inject_variables, launch_editor, FlowletResult},
+    util::{
+        FlowletResult, clean_command, extract_json_path, find_project_config, inject_variables,
+        launch_editor,
+    },
 };
 
 #[derive(Debug, Error)]
@@ -33,6 +38,9 @@ pub struct Command;
 
 impl Command {
     pub async fn save(ctx: &impl WithContext, name: String, cmd: String) -> FlowletResult<()> {
+        // Detect Project Dir
+        let project = find_project_config().ok().flatten();
+
         let command = models::command::Command::read(
             ctx.get(),
             ReadCommandInput {
@@ -57,6 +65,7 @@ impl Command {
                 CreateCommandInput {
                     name: name.clone(),
                     cmd,
+                    project,
                 },
             )
             .await?;
@@ -70,23 +79,29 @@ impl Command {
         Ok(())
     }
 
-    pub async fn list(ctx: &impl WithContext, remote: bool) -> FlowletResult<()> {
-        let commands = models::command::Command::list(
-            ctx.get(),
-            ListCommandInput {
-                query: deeb::Query::All,
-                remote,
-            },
-        )
-        .await?;
+    pub async fn list(ctx: &impl WithContext, remote: bool, global: bool) -> FlowletResult<()> {
+        // Detect Project Dir
+        let project = find_project_config().ok().flatten();
+
+        let mut query = Query::All;
+
+        if let Some(project) = project {
+            if !global {
+                Printer::info(Icon::Project, "Project Selected:", project.as_str());
+                query = Query::eq("project", project);
+            }
+        }
+
+        let commands =
+            models::command::Command::list(ctx.get(), ListCommandInput { query, remote }).await?;
 
         let rows: Vec<Vec<String>> = commands
             .into_iter()
-            .map(|cmd| vec![cmd.name, cmd.cmd])
+            .map(|cmd| vec![cmd.name, cmd.cmd, cmd.project.unwrap_or("--".to_string())])
             .collect();
 
         Printer::success(Icon::Success, "Success", "Found commands!");
-        Printer::table(vec!["Name", "Command"], rows);
+        Printer::table(vec!["Name", "Command", "Project"], rows);
         Ok(())
     }
 
@@ -336,6 +351,7 @@ impl Command {
                 CreateCommandInput {
                     name: name.clone(),
                     cmd: command.cmd,
+                    project: command.project,
                 },
             )
             .await?;

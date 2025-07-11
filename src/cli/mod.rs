@@ -2,8 +2,8 @@ use clap::{Parser, Subcommand};
 
 pub mod auth;
 pub mod command;
-pub mod variable;
 pub mod project;
+pub mod variable;
 
 #[derive(Parser)]
 #[command(name = "flowlet")]
@@ -56,10 +56,12 @@ pub enum Commands {
         #[arg(required = true)]
         cmd: String, // handles multi-word shell command
     },
-    // List local commands
+    // List commands
     Ls {
         #[arg(long)]
         remote: bool,
+        #[arg(long)]
+        global: bool,
     },
     Show {
         name: String,

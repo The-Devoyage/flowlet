@@ -25,7 +25,7 @@ impl<'a> App<'a> {
                     json_path,
                 } => Command::run(self, name, save_var, json_path).await,
                 Commands::Save { name, cmd } => Command::save(self, name, cmd).await,
-                Commands::Ls { remote } => Command::list(self, remote).await,
+                Commands::Ls { remote, global} => Command::list(self, remote, global).await,
                 Commands::Show { name } => Command::show(self, name).await,
                 Commands::Rm { name } => Command::remove(self, name).await,
                 Commands::Edit { name } => Command::edit(self, name).await,
