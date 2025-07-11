@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 pub mod auth;
 pub mod command;
 pub mod variable;
+pub mod project;
 
 #[derive(Parser)]
 #[command(name = "flowlet")]
@@ -25,6 +26,10 @@ pub enum RootCommands {
     /// Register, login, and  logout.
     #[command(subcommand)]
     Auth(Auth),
+
+    /// Manage projects
+    #[command(subcommand)]
+    Project(Project),
 
     /// Catch-all for unknown commands
     #[command(external_subcommand)]
@@ -95,4 +100,16 @@ pub enum Auth {
 
     /// End session
     Logout,
+}
+
+#[derive(Subcommand)]
+pub enum Project {
+    /// Create a new project.
+    New,
+
+    /// Remove a project by name
+    Rm { name: String },
+
+    /// List all projects
+    Ls,
 }

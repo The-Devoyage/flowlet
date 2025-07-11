@@ -1,4 +1,5 @@
-use crate::cli::{Auth, Commands, RootCommands, Vars};
+use crate::cli::project::ProjectCli;
+use crate::cli::{Auth, Commands, Project, RootCommands, Vars};
 use crate::cli::{command::Command, variable::Variable};
 use crate::flowlet_context::{FlowletContext, WithContext};
 use crate::printer::{Icon, Printer};
@@ -41,6 +42,11 @@ impl<'a> App<'a> {
                 Auth::Register => crate::cli::auth::Auth::register(self).await,
                 Auth::Logout => crate::cli::auth::Auth::logout(self).await,
             },
+            RootCommands::Project(project) => match project {
+                Project::New => ProjectCli::new(self).await,
+                Project::Rm { name } => ProjectCli::remove(self, name).await,
+                Project::Ls => ProjectCli::list(self).await,
+            },
             RootCommands::Unknown(args) => {
                 if args.is_empty() {
                     Printer::error(Icon::Error, "Error", "No command provided.");
@@ -49,7 +55,10 @@ impl<'a> App<'a> {
                     Printer::error(
                         Icon::Error,
                         "Error",
-                        &format!("Multiple arguments detected. Please use the proper command syntax: `flowlet command run {:?} ...`", args.first()),
+                        &format!(
+                            "Multiple arguments detected. Please use the proper command syntax: `flowlet command run {:?} ...`",
+                            args.first()
+                        ),
                     );
                     Ok(())
                 } else if let Some(name) = args.first() {

@@ -14,6 +14,7 @@ pub enum Icon {
     Info,
     Auth,
     Rocket,
+    Project,
 }
 
 impl Icon {
@@ -29,6 +30,7 @@ impl Icon {
             Icon::Info => "ℹ️",
             Icon::Auth => "🔐",
             Icon::Rocket => "🚀",
+            Icon::Project => "📁",
         }
     }
 
@@ -43,13 +45,14 @@ impl Icon {
             Icon::Local => Color::Cyan,
             Icon::Info => Color::BrightBlue,
             Icon::Auth => Color::Magenta,
+            Icon::Project => Color::Blue,
         }
     }
 
     pub fn formatted(&self) -> String {
         match self {
             Icon::Cloud | Icon::Info => format!("{}   ", self.symbol()), // 3 spaces
-            Icon::Success | Icon::Trash | Icon::Auth | Icon::Rocket => {
+            Icon::Success | Icon::Trash | Icon::Auth | Icon::Rocket | Icon::Project => {
                 format!("{}  ", self.symbol())
             } // 2 spaces
             Icon::Warning | Icon::Failure | Icon::Error => format!("{}  ", self.symbol()),
