@@ -7,6 +7,7 @@ pub mod command;
 pub mod user;
 pub mod variable;
 pub mod project;
+pub mod task;
 
 /// A trait that all models should implement
 pub trait Api: Sized {

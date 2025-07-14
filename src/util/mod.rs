@@ -2,6 +2,8 @@ use crate::flowlet_context::WithContext;
 use crate::flowlet_db::models::Api;
 use crate::flowlet_db::models::variable::{ReadVariableInput, Variable};
 use crate::printer::{Icon, Printer};
+use chrono::NaiveDate;
+use dialoguer::Input;
 use regex::Regex;
 use std::fs;
 use std::fs::File;
@@ -114,7 +116,6 @@ pub fn find_project_config() -> std::io::Result<Option<String>> {
                 }
             };
 
-
             if let Some(project) = parsed.get("project") {
                 if let Some(name) = project.get("name").and_then(|v| v.as_str()) {
                     return Ok(Some(name.to_string()));
@@ -130,4 +131,38 @@ pub fn find_project_config() -> std::io::Result<Option<String>> {
     }
 
     Ok(None)
+}
+
+pub fn truncate_with_ellipsis(s: &str, max_len: usize) -> String {
+    if s.chars().count() > max_len {
+        let truncated: String = s.chars().take(max_len).collect();
+        format!("{}...", truncated)
+    } else {
+        s.to_string()
+    }
+}
+
+pub fn request_date_input(prompt: &str, allow_empty: bool) -> FlowletResult<Option<NaiveDate>> {
+    let requested_date = loop {
+        let input: String = Input::new()
+            .with_prompt(prompt)
+            .allow_empty(allow_empty)
+            .interact_text()?;
+
+        let trimmed = input.trim();
+
+        if trimmed.is_empty() {
+            break None;
+        }
+
+        match chrono::NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
+            Ok(date) => break Some(date),
+            Err(_) => {
+                println!("❌ Invalid date format. Please use YYYY-MM-DD.");
+                continue;
+            }
+        }
+    };
+
+    Ok(requested_date)
 }

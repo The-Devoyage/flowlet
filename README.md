@@ -13,13 +13,13 @@ A modern, minimal CLI tool designed to **persist your developer flow** — save,
 - 🧠 Extract and save variables from command output  
 - 📁 Save, update, remove, and list commands & vars  
 - 📤 Push/pull commands from the cloud
+- 📁 Projects for grouping related commands and variables
 
 ### 🧪 Maybe Soon
 
 - 🗒️ Notes and annotations for commands
 - 👥 Collaboration and sharing (teams, permissions)
-- 📁 Projects for grouping related commands and variables
-- 🌎 Multiple environments (e.g. dev, staging, prod)
+- 🌎 Multiple environments (e.g. dev, staging, prod) [coming soon]
 - 🧭 Enhanced TUI mode for browsing, running, and editing
 
 ---

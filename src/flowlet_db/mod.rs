@@ -1,6 +1,8 @@
 use deeb::Deeb;
 use dirs::home_dir;
-use models::{auth::Auth, command::Command, project::Project, user::User, variable::Variable};
+use models::{
+    auth::Auth, command::Command, project::Project, task::Task, user::User, variable::Variable,
+};
 use thiserror::Error;
 
 use crate::util::FlowletResult;
@@ -30,6 +32,7 @@ impl FlowletDb {
         let command = Command::entity();
         let variable = Variable::entity();
         let project = Project::entity();
+        let task = Task::entity();
 
         // Persist Dir
         let home = home_dir().ok_or(FlowletDbError::HomeDirAccessDenied)?;
@@ -37,7 +40,7 @@ impl FlowletDb {
         deeb.add_instance(
             "local",
             &format!("{}/.flowlet.json", home.to_str().unwrap()),
-            vec![auth, user, command, variable, project],
+            vec![auth, user, command, variable, project, task],
         )
         .await
         .map_err(|e| {

@@ -1,5 +1,6 @@
 use crate::cli::project::ProjectCli;
-use crate::cli::{Auth, Commands, Project, RootCommands, Vars};
+use crate::cli::task::TaskCli;
+use crate::cli::{Auth, Commands, Project, RootCommands, Task, Vars};
 use crate::cli::{command::Command, variable::Variable};
 use crate::flowlet_context::{FlowletContext, WithContext};
 use crate::printer::{Icon, Printer};
@@ -25,7 +26,7 @@ impl<'a> App<'a> {
                     json_path,
                 } => Command::run(self, name, save_var, json_path).await,
                 Commands::Save { name, cmd } => Command::save(self, name, cmd).await,
-                Commands::Ls { remote, global} => Command::list(self, remote, global).await,
+                Commands::Ls { remote, global } => Command::list(self, remote, global).await,
                 Commands::Show { name } => Command::show(self, name).await,
                 Commands::Rm { name } => Command::remove(self, name).await,
                 Commands::Edit { name } => Command::edit(self, name).await,
@@ -46,6 +47,13 @@ impl<'a> App<'a> {
                 Project::New => ProjectCli::new(self).await,
                 Project::Rm { name } => ProjectCli::remove(self, name).await,
                 Project::Ls => ProjectCli::list(self).await,
+            },
+            RootCommands::Task(task) => match task {
+                Task::New => TaskCli::new(self).await,
+                Task::Ls { remote, global } => TaskCli::list(self, remote, global).await,
+                Task::Rm { _id } => TaskCli::remove(self, _id).await,
+                Task::Show { _id } => TaskCli::show(self, _id).await,
+                Task::Edit { _id } => TaskCli::edit(self, _id).await,
             },
             RootCommands::Unknown(args) => {
                 if args.is_empty() {

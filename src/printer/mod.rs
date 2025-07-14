@@ -15,6 +15,7 @@ pub enum Icon {
     Auth,
     Rocket,
     Project,
+    Task,
 }
 
 impl Icon {
@@ -31,6 +32,7 @@ impl Icon {
             Icon::Auth => "🔐",
             Icon::Rocket => "🚀",
             Icon::Project => "📁",
+            Icon::Task => "📌",
         }
     }
 
@@ -46,13 +48,19 @@ impl Icon {
             Icon::Info => Color::BrightBlue,
             Icon::Auth => Color::Magenta,
             Icon::Project => Color::Blue,
+            Icon::Task => Color::BrightGreen,
         }
     }
 
     pub fn formatted(&self) -> String {
         match self {
             Icon::Cloud | Icon::Info => format!("{}   ", self.symbol()), // 3 spaces
-            Icon::Success | Icon::Trash | Icon::Auth | Icon::Rocket | Icon::Project => {
+            Icon::Success
+            | Icon::Trash
+            | Icon::Auth
+            | Icon::Rocket
+            | Icon::Project
+            | Icon::Task => {
                 format!("{}  ", self.symbol())
             } // 2 spaces
             Icon::Warning | Icon::Failure | Icon::Error => format!("{}  ", self.symbol()),
@@ -149,6 +157,30 @@ impl Printer {
         for line in lines {
             println!("{}", line.bright_white().bold());
         }
+        println!();
+    }
+
+    pub fn block_kv(title: &str, kvs: &[(&str, String)]) {
+        use colored::Colorize;
+        use unicode_width::UnicodeWidthStr;
+
+        println!("\n{}", title.bold().underline());
+
+        let max_key_width = kvs
+            .iter()
+            .map(|(k, _)| UnicodeWidthStr::width(*k))
+            .max()
+            .unwrap_or(0);
+
+        for (key, value) in kvs {
+            let padded_key = format!("{:width$}", key, width = max_key_width);
+            println!(
+                "{} {}",
+                padded_key.bright_blue().bold(),
+                value.bright_white()
+            );
+        }
+
         println!();
     }
 }

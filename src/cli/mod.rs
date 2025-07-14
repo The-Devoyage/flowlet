@@ -3,6 +3,7 @@ use clap::{Parser, Subcommand};
 pub mod auth;
 pub mod command;
 pub mod project;
+pub mod task;
 pub mod variable;
 
 #[derive(Parser)]
@@ -30,6 +31,10 @@ pub enum RootCommands {
     /// Manage projects
     #[command(subcommand)]
     Project(Project),
+
+    /// Manage Tasks
+    #[command(subcommand)]
+    Task(Task),
 
     /// Catch-all for unknown commands
     #[command(external_subcommand)]
@@ -114,4 +119,27 @@ pub enum Project {
 
     /// List all projects
     Ls,
+}
+
+#[derive(Subcommand)]
+pub enum Task {
+    /// Create a new task.
+    New,
+
+    /// Remove a task by _id. 
+    Rm { _id: String },
+
+    /// List all projects
+    Ls {
+        #[arg(long)]
+        remote: bool,
+        #[arg(long)]
+        global: bool,
+    },
+
+    /// View the details of a task
+    Show { _id: String },
+    
+    /// Edit the details of a task
+    Edit { _id: String },
 }
