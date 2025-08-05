@@ -2,6 +2,7 @@
 
 A modern, minimal CLI tool designed to **persist your developer flow** — save, run, organize, and sync shell commands, variables, and workflows with ease. Flowlet helps you reduce friction, automate repeat tasks, and move seamlessly between local and cloud environments.
 
+**NOTE:** Flowlet is an example app built on top of [Deeb DB](https://deebkit.com) that requires a self hosted and experimental Deeb Server running to function correctly.
 
 ---
 
