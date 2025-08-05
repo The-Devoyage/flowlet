@@ -1,5 +1,3 @@
-__pycache__
-flowlet.egg-info
 *.env
-venv
-/target
+target
+flowlet.toml
